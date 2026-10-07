@@ -55,6 +55,14 @@ const STATES = [
                "priority. The threat level rises.",
         needs: "Part 2", req: "R2",
         test: (m) => {
+            const hs = Object.values(m.highContacts || {});
+            if (hs.length) {
+                const first = hs[0];
+                return m.high + " HIGH: " + first.id + " from " + first.sensor +
+                    " is not filed and is in " + first.region +
+                    (hs.length > 1 ? ", and " + (hs.length - 1) + " other contact" +
+                        (hs.length > 2 ? "s" : "") : "");
+            }
             const w = m.priorityWaits;
             if (w.length) {
                 const mean = w.reduce((a, b) => a + b, 0) / w.length;

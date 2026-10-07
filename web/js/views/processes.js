@@ -63,7 +63,7 @@ export function renderProcesses(root, model, live) {
 
             let state;
             if (s.up === false && /^finished/.test(s.how || "")) {
-                state = chip("idle", "finished its burst");
+                state = chip("idle", "finished its count");
             } else if (s.up === false) {
                 state = chip("warn", s.how || "stopped");
             } else if (run && !run.running) {
@@ -94,13 +94,13 @@ export function renderProcesses(root, model, live) {
                 chip("info", sensors.length + " of 4")),
             el("div", { class: "card-b tablewrap" }, table,
                el("p", { class: "note" }, text(hasRun
-                   ? "reports sent is what each sensor sent, from live.json. The " +
-                     "satellite sends 2000 in one burst; the mission log names only the " +
-                     "priority ones, which is 200 of them."
+                   ? "reports sent is what each sensor sent, from live.json. NWS, " +
+                     "AUR and AIS send for the whole run. By default the satellite " +
+                     "sends 2000 each second in a pass of 10 s, then 10 s with no " +
+                     "reports; its process runs in the gap."
                    : "reports in the log counts the contacts the LOG names. Part 1 logs " +
-                     "every contact; Part 2 and later log only the priority ones, so a " +
-                     "satellite burst of 2000 shows as 200. Run a lab with LIVE= to see " +
-                     "what each sensor sent.")))));
+                     "every contact; Part 2 and later log only the priority ones, one " +
+                     "report in ten. Run a lab with LIVE= to see what each sensor sent.")))));
     }
 
     if (model.pool) {

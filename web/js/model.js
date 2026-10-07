@@ -2,6 +2,17 @@ import { parseLogLine, parseContactLine, LEVELS } from "./parse.js";
 
 const MAX_KEEP = 4000;
 
+function noteUrgent(m, f) {
+    if (f.high) {
+        m.high++;
+        if (!m.highContacts[f.id]) {
+            m.highContacts[f.id] = { id: f.id, sensor: f.sensor, region: f.high };
+        }
+    } else {
+        m.priority++;
+    }
+}
+
 export function createModel() {
     return {
         events: [],
@@ -16,6 +27,8 @@ export function createModel() {
         rejected: 0,
         priority: 0,
         priorityWaits: [],
+        high: 0,
+        highContacts: {},
         logPerSensor: {},
 
         self: null,
@@ -87,7 +100,7 @@ export function addEvents(m, lines) {
                 });
                 break;
             case "priorityServed":
-                m.priority++;
+                noteUrgent(m, f);
                 m.accepted++;
                 bump(m.logPerSensor, f.sensor);
                 m.priorityWaits.push(f.waitedMs);
@@ -152,7 +165,7 @@ export function addEvents(m, lines) {
                            busy: f.busy, queue: f.queue };
                 break;
             case "priorityQueued":
-                m.priority++;
+                noteUrgent(m, f);
                 bump(m.logPerSensor, f.sensor);
                 break;
             case "stalled":

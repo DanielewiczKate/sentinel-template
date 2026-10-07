@@ -1,8 +1,6 @@
 # what make builds
 /build/
 *.o
-# except the given acceptance test, which make accept1 links with your library
-!/tools/bin/*/accept_lab1.o
 *.a
 *.d
 

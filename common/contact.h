@@ -7,9 +7,9 @@
  *   1755534061.482913 NWS ACCF-4587 68.7100 -105.7000 420.0 P
  *
  * The 128-byte limit is a design decision. Linux writes up to PIPE_BUF (4096)
- * bytes to a pipe in one atomic step. So four sensor processes can share one
- * pipe, and their lines do not mix. Lab 2 measures this. A limit above
- * PIPE_BUF would break Part 2.
+ * bytes to a pipe or a FIFO in one atomic step. So many programs can write to
+ * the centre's priority FIFO, and their lines do not mix, when each line is
+ * one write(). Lab 2 measures this. A limit above PIPE_BUF would break it.
  */
 
 #ifndef SENTINEL_CONTACT_H
@@ -29,7 +29,7 @@ typedef enum {
     SENSOR_NWS = 0,   /* North Warning System radar,   ~20/s   */
     SENSOR_AUR,       /* CP-140 Aurora patrol aircraft, ~5/s   */
     SENSOR_AIS,       /* Coastal radar and AIS receiver,~50/s  */
-    SENSOR_SAT,       /* RADARSAT satellite,        ~2000/burst */
+    SENSOR_SAT,       /* RADARSAT satellite,        ~2000/s    */
     SENSOR_COUNT
 } sensor_id_t;
 
@@ -71,9 +71,9 @@ const char *contact_strerror(contact_err_t e);
 /* The name of a sensor ("NWS"), or NULL if id is not a sensor_id_t value. */
 const char *sensor_name(sensor_id_t id);
 
-/* The nominal number of reports each second for a sensor, from Table 1. SAT
-   sends its reports in one burst, not at a steady rate, so its value is the
-   size of the burst. */
+/* The nominal number of reports each second for a sensor: NWS 20, AUR 5,
+   AIS 50, SAT 2000. NWS, AUR and AIS send at this rate for the whole run.
+   SAT sends at this rate in a pass of 10 s, and then nothing for 10 s. */
 int sensor_rate(sensor_id_t id);
 
 /* Format c into buf as one line, including the '\n' at the end.

@@ -216,6 +216,7 @@ export function renderMap(contacts, options) {
     const routine = svgEl("g", { class: "contacts" });
     const urgent = svgEl("g", { class: "contacts priority" });
     const unknown = opts.unknown || new Set();
+    const high    = opts.high || new Map();
 
     const staleMs = opts.staleMs || STALE_MS;
     const now = opts.now;
@@ -273,14 +274,17 @@ export function renderMap(contacts, options) {
             }));
             if (foreign) g.append(unknownFrame(x, y, c.id));
             title(g, c.id + "  " + c.sensor + "  PRIORITY  " +
-                (foreign ? "UNKNOWN  " : "") + where + "  " + c.speed + " kn" +
-                agePart);
+                (foreign ? "UNKNOWN  " : "") +
+                (high.has(c.id) ? "HIGH: in " + high.get(c.id) + "  " : "") +
+                where + "  " + c.speed + " kn" + agePart);
             urgent.append(g);
         } else if (foreign) {
+            const region = high.get(c.id);
             const g = svgEl("g", { opacity: fade.toFixed(2) });
-            g.append(symbol(kind, x, y, "#ffb020"));
+            g.append(symbol(kind, x, y, region ? "#ff5f5f" : "#ffb020"));
             g.append(unknownFrame(x, y, c.id));
-            title(g, name + headingOf(opts.trails, c.id));
+            title(g, name + (region ? "  HIGH: in " + region : "") +
+                  headingOf(opts.trails, c.id));
             urgent.append(g);
         } else {
             const mark = symbol(kind, x, y, colour);

@@ -15,15 +15,25 @@ typedef struct {
 } traffic_zone_t;
 
 typedef struct {
-    char           (*ids)[CONTACT_ID_MAX + 1];
-    size_t           n_ids;
-    traffic_zone_t  *zones;
-    size_t           n_zones;
+    char   name[TRAFFIC_ZONE_NAME_MAX + 1];
+    double lat_s, lat_n;
+    double lon_w, lon_e;
+} traffic_region_t;
+
+typedef struct {
+    char              (*ids)[CONTACT_ID_MAX + 1];
+    size_t              n_ids;
+    traffic_zone_t     *zones;
+    size_t              n_zones;
+    traffic_region_t   *regions;
+    size_t              n_regions;
 } traffic_t;
 
 int traffic_load(const char *path, traffic_t *t, long *bad_line);
 
 int traffic_is_filed(const traffic_t *t, const contact_t *c);
+
+const traffic_region_t *traffic_in_region(const traffic_t *t, const contact_t *c);
 
 void traffic_free(traffic_t *t);
 
@@ -42,6 +52,8 @@ typedef struct {
 
     char    sensors[SENSOR_COUNT][CONTACT_SENSOR_LEN + 1];
     int     n_sensors;
+
+    char    region[TRAFFIC_ZONE_NAME_MAX + 1];
 } traffic_unknown_t;
 
 typedef struct {

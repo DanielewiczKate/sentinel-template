@@ -58,6 +58,8 @@ function requirements(model) {
     const hasLog = model.events.length > 0;
     const t = model.totals;
 
+    const sat = sensorRows(model).find((s) => s.name === "SAT") || null;
+
     const w = model.priorityWaits;
     const meanWait = w.length ? w.reduce((a, b) => a + b, 0) / w.length : null;
 
@@ -77,11 +79,13 @@ function requirements(model) {
                  (meanWait !== null ? ", mean wait " + meanWait.toFixed(1) + " ms" : "")
                : "waiting for a priority contact", kind: "measured" },
 
-        { id: "R3", what: "Absorbs a 2000 burst",
-          state: (model.sensors.SAT && model.sensors.SAT.burst) ? "pass" : "wait",
-          how: (model.sensors.SAT && model.sensors.SAT.burst)
-               ? "SAT sent a burst of " + model.sensors.SAT.burst
-               : "waiting for Part 3", kind: "measured" },
+        { id: "R3", what: "Absorbs 2000 a second",
+          state: sat && sat.pid !== null && sat.count > 0 ? "pass" : "wait",
+          how: !sat || sat.pid === null ? "waiting for Part 2"
+               : (sat.burst ? "SAT sent a burst of " + sat.burst
+                            : "SAT at " + (sat.rate || "?") + "/s, " +
+                              sat.count + " reports in the log"),
+          kind: "measured" },
 
         { id: "R4", what: "Shared data stays exact",
           state: !t ? "wait" : (t.processed === t.read ? "pass" : "fail"),
@@ -247,7 +251,7 @@ function coreStrip(live) {
         }));
         svg.append(mk("rect", {
             x: x0, y: y, width: cpuW, height: LANE - 4,
-            class: sp.f === "P" ? "sp-p" : "sp-r",
+            class: (sp.f === "P" || sp.f === "H") ? "sp-p" : "sp-r",
         }));
     });
 
@@ -352,7 +356,8 @@ function workerPanel(live, liveSame, prev) {
             el("span", { class: "wlast" },
                 text(w.last_id ? "last " + w.last_id : (live.protected === false
                     ? "not published by Lab 3" : "no report yet"))),
-            w.last_flag === "P" ? chip("warn", "PRIORITY")
+            w.last_flag === "H" ? chip("bad", "HIGH")
+                : w.last_flag === "P" ? chip("warn", "PRIORITY")
                 : (w.last_flag === "R" ? chip("info", "routine") : el("span", {})),
             el("span", { class: "wcount" },
                 text(heldPct === null
@@ -558,7 +563,10 @@ function comparePanel(cmp) {
     body.append(el("p", { class: "note" }, text(
         "Same binary, same seed \"" + cmp.same.seed + "\", same " +
         (cmp.same.ms / 1000) + " s, same " + cmp.same.queue + "-slot queue, " +
-        "same " + cmp.same.service_us + " us of processor for each report. " +
+        "same " + cmp.same.service_us + " us of processor for each report" +
+        (cmp.same.sat_pass === "0"
+            ? ", and the satellite sent with no gap between its passes. "
+            : ". ") +
         "One thing changed." +
         (one.cores_used !== null && many.cores_used !== null && many.cores_used > 1
             ? " The second run passed 1.00, which only more than one processor " +
@@ -619,6 +627,15 @@ function unknownIds(model, live) {
     return set;
 }
 
+function highIds(model, live) {
+    const map = new Map();
+    Object.values(model.highContacts || {}).forEach((h) => map.set(h.id, h.region));
+    if (live && Array.isArray(live.unknown)) {
+        live.unknown.forEach((u) => { if (u.region) map.set(u.id, u.region); });
+    }
+    return map;
+}
+
 export function renderDashboard(root, model, run, tracks, live, liveSame, livePrev,
                                trails, compare) {
     root.replaceChildren();
@@ -641,14 +658,21 @@ export function renderDashboard(root, model, run, tracks, live, liveSame, livePr
     const tiles = el("div", { class: "tiles" });
 
     const unknown = unknownIds(model, live);
-    tiles.append(unknown.size > 0
+    const high = highIds(model, live);
+    const outside = [...unknown].filter((id) => !high.has(id)).length;
+    const regions = [...new Set(high.values())].join(", ");
+    tiles.append(high.size > 0
         ? tile("Threat level", "HIGH", "bad",
-               unknown.size === 1 ? "unidentified contact in area"
-                                  : unknown.size + " unidentified contacts in area")
-        : (model.priority > 0
+               (high.size === 1 ? "1 unidentified contact" : high.size + " unidentified contacts") +
+               " in " + regions)
+        : (outside > 0
             ? tile("Threat level", "ELEVATED", "warn",
-                   model.priority + " priority contacts")
-            : tile("Threat level", "LOW", "ok", "no priority contact")));
+                   (outside === 1 ? "1 unidentified contact" : outside + " unidentified contacts") +
+                   " outside the monitored regions")
+            : (model.priority > 0
+                ? tile("Threat level", "ELEVATED", "warn",
+                       model.priority + " priority contacts")
+                : tile("Threat level", "LOW", "ok", "no priority contact"))));
 
     tiles.append(procs > 0
         ? (model.finished
@@ -709,7 +733,7 @@ export function renderDashboard(root, model, run, tracks, live, liveSame, livePr
           }))
         : shown;
     const map = renderMap(plotted, {
-        activeSensors: active, unknown: unknown, trails: trails,
+        activeSensors: active, unknown: unknown, high: high, trails: trails,
         now: tracks ? tracks.now : null,
         staleMs: live && live.assoc_max_age_ms ? live.assoc_max_age_ms : null,
     });

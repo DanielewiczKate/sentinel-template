@@ -57,7 +57,7 @@ int traffic_load(const char *path, traffic_t *t, long *bad_line)
         return -1;
     }
 
-    size_t id_cap = 0, zone_cap = 0;
+    size_t id_cap = 0, zone_cap = 0, region_cap = 0;
     char   line[256];
     long   lineno = 0;
 
@@ -73,7 +73,7 @@ int traffic_load(const char *path, traffic_t *t, long *bad_line)
         }
 
         char kind[8], name[64];
-        double lat, lon, radius;
+        double lat, lon, radius, lat_n, lon_e;
         char extra;
 
         if (sscanf(p, "%7s", kind) != 1) {
@@ -110,6 +110,27 @@ int traffic_load(const char *path, traffic_t *t, long *bad_line)
             z->lat       = lat;
             z->lon       = lon;
             z->radius_km = radius;
+        } else if (strcmp(kind, "region") == 0) {
+            if (sscanf(p, "region %63s %lf %lf %lf %lf %c",
+                       name, &lat, &lat_n, &lon, &lon_e, &extra) != 5 ||
+                strlen(name) > TRAFFIC_ZONE_NAME_MAX ||
+                !isfinite(lat) || !isfinite(lat_n) || lat < -90.0 ||
+                lat_n > 90.0 || lat >= lat_n ||
+                !isfinite(lon) || !isfinite(lon_e) || lon < -180.0 ||
+                lon_e > 180.0 || lon >= lon_e) {
+                goto bad;
+            }
+            void *arr = t->regions;
+            if (grow(&arr, &region_cap, t->n_regions + 1, sizeof *t->regions) != 0) {
+                goto fail;
+            }
+            t->regions = arr;
+            traffic_region_t *r = &t->regions[t->n_regions++];
+            memcpy(r->name, name, strlen(name) + 1);
+            r->lat_s = lat;
+            r->lat_n = lat_n;
+            r->lon_w = lon;
+            r->lon_e = lon_e;
         } else {
             goto bad;
         }
@@ -159,6 +180,21 @@ int traffic_is_filed(const traffic_t *t, const contact_t *c)
     return 0;
 }
 
+const traffic_region_t *traffic_in_region(const traffic_t *t, const contact_t *c)
+{
+    if (t == NULL || c == NULL) {
+        return NULL;
+    }
+    for (size_t i = 0; i < t->n_regions; i++) {
+        const traffic_region_t *r = &t->regions[i];
+        if (c->lat >= r->lat_s && c->lat <= r->lat_n &&
+            c->lon >= r->lon_w && c->lon <= r->lon_e) {
+            return r;
+        }
+    }
+    return NULL;
+}
+
 void traffic_free(traffic_t *t)
 {
     if (t == NULL) {
@@ -166,6 +202,7 @@ void traffic_free(traffic_t *t)
     }
     free(t->ids);
     free(t->zones);
+    free(t->regions);
     memset(t, 0, sizeof *t);
 }
 
@@ -185,6 +222,17 @@ static void note_sensor(traffic_unknown_t *u, const char *sensor)
     }
     if (u->n_sensors < SENSOR_COUNT) {
         memcpy(u->sensors[u->n_sensors++], sensor, CONTACT_SENSOR_LEN + 1);
+    }
+}
+
+static void note_region(traffic_unknown_t *u, const traffic_t *t,
+                        const contact_t *c)
+{
+    const traffic_region_t *r = traffic_in_region(t, c);
+    if (r == NULL) {
+        u->region[0] = '\0';
+    } else {
+        memcpy(u->region, r->name, strlen(r->name) + 1);
     }
 }
 
@@ -212,6 +260,7 @@ int traffic_watch(traffic_watch_t *w, const traffic_t *t, const contact_t *c,
             u->last_ns = now_ns;
             u->reports++;
             note_sensor(u, c->sensor);
+            note_region(u, t, c);
             return 0;
         }
     }
@@ -238,6 +287,7 @@ int traffic_watch(traffic_watch_t *w, const traffic_t *t, const contact_t *c,
     u->first_ns = now_ns;
     u->last_ns  = now_ns;
     note_sensor(u, c->sensor);
+    note_region(u, t, c);
     return 1;
 }
 
@@ -285,8 +335,14 @@ int traffic_watch_write_json(const traffic_watch_t *w, FILE *f, int64_t now_ns)
         }
         fputc(']', f);
 
-        fprintf(f, ",\"lat\":%.4f,\"lon\":%.4f,\"reports\":%ld,\"age_ms\":%lld}",
-                u->lat, u->lon, u->reports, (long long)((now_ns - u->last_ns) / 1000000));
+        fprintf(f, ",\"lat\":%.4f,\"lon\":%.4f,\"region\":", u->lat, u->lon);
+        if (u->region[0] != '\0') {
+            traffic_json_string(f, u->region);
+        } else {
+            fputs("null", f);
+        }
+        fprintf(f, ",\"reports\":%ld,\"age_ms\":%lld}",
+                u->reports, (long long)((now_ns - u->last_ns) / 1000000));
     }
     fputc(']', f);
     return ferror(f) ? -1 : 0;

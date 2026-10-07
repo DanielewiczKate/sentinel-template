@@ -3,12 +3,12 @@
 The page shows the operations centre from the files that your programs write. It only reads
 files, and it changes nothing in your code or your run.
 
-Section 5 of the lab document says that the dashboard screens are not a course requirement.
+Section 5 of the course Lab Documentation[^labdoc] says that the dashboard screens are not a
+course requirement.
 The page is there to help you see what your code does.
 
-**Your lab manual explains the page for your lab.** For Lab 1 that is section 5 of
-`docs/lab1/lab1_manual.pdf`: how to start the page, why a page opened as a file does not work,
-and which three views a Lab 1 run fills. This file is the reference for the page itself.
+This file is the reference for the page. The SENTINEL Lab Manual,
+`docs/manual/sentinel_manual.pdf`, names it, and it does not repeat it.
 
 ---
 
@@ -79,13 +79,13 @@ Two things to know, because you will meet both:
 
 - **Labs 1 and 2 never write `live.json`.** That is why their Dashboard keeps a placeholder
   where the worker and queue panels go. Nothing is broken.
-- **Labs 3 and 4 write it only for a timed run.** The manual of those labs gives the command
+- **Labs 3 and 4 write it only for a timed run.** The brief of those labs gives the command
   when you reach them.
 
 The page reads the files again every second, so a view fills as soon as the run that writes it
 finishes. To watch a view fill DURING a run, your program must still be writing while you
-look. Lab 1 does that with `demo_lab1 --follow`, and section 7.5 of `docs/lab1/lab1_manual.pdf`
-gives the three commands.
+look. Lab 1 does that with `demo_lab1 --follow`, and Section 5 of the Lab 1 Guide,
+`docs/lab1/lab1_guide.pdf`, gives the three commands.
 
 ---
 
@@ -93,8 +93,8 @@ gives the three commands.
 
 | View | It reads | It shows |
 |---|---|---|
-| Dashboard | `missions.log`, `feed.txt` | the state of the centre, the map, the counts, R1 to R6, the alerts, the end of the log |
-| Situation | `missions.log`, `feed.txt` | the seven states of Section 5, and which of them your run shows |
+| Dashboard | `missions.log`, `feed.txt` | the state of the centre, the map, the counts, R1 to R6[^req], the alerts, the end of the log |
+| Situation | `missions.log`, `feed.txt` | the seven states of Section 5 of the Lab Documentation[^labdoc], and which of them your run shows |
 | Contacts | `feed.txt` | every contact report |
 | Processes | `missions.log` | the processes that your code wrote to the log |
 | Mission log | `missions.log` | every line of the log, by level |
@@ -117,8 +117,16 @@ web/live/
   bench.json       the state of the bench board (make bench-sim or make bench-health)
 ```
 
-The page understands the log lines that each lab README defines. A line in another format
+The page understands the log lines that the brief of each lab defines[^brief]. A line in another format
 still appears, marked UNPARSED.
 
 The Bench view watches the time inside `bench.json`, not the clock of your browser. When the
 file stops changing for 3 seconds, the program that writes it has stopped, and the view says so.
+
+---
+
+[^labdoc]: The ECE 476 Lab Documentation for SENTINEL. The course gives it to you. Its Section 5
+    is a user story of the operations centre, and its Figures 3 to 9 show the dashboard screens.
+[^req]: The six requirements of SENTINEL, R1 to R6. The SENTINEL Lab Manual, Section 1.2,
+    `docs/manual/sentinel_manual.pdf`, lists them.
+[^brief]: For Lab 1: the Lab 1 Brief, Section 3.3, `docs/lab1/lab1_brief.pdf`.

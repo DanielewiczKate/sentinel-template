@@ -3,8 +3,11 @@
 #
 # id NAME                    a filed flight plan or an AIS registration
 # zone NAME LAT LON RADIUS   a filed position; radius in km
+# region NAME S N W E        a region the centre monitors: its south,
+#                            north, west and east edges in degrees
 #
 # A report whose id is not filed, and that is in no zone, is unknown.
+# An unknown report in a region gets the centre's HIGH priority.
 
 id ACCF-0000
 id ACCF-0001
@@ -2768,3 +2771,8 @@ id SATC-9987
 
 # The shipping lane where the bench's AIS beam crosses the strait.
 zone STRAIT-LANE 49.5375 -125.0000 5
+
+# The regions the centre monitors: two border areas.
+# WEST ends at the warning line of the bench box.
+region WEST 45.0000 78.0000 -145.0000 -131.6667
+region STRAIT 47.5000 49.5000 -125.5000 -122.5000

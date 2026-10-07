@@ -35,8 +35,8 @@ const FACTS = [
       take: (m) => ({ id: m[1], sensor: m[2], lat: +m[3], lon: +m[4], speed: +m[5] }) },
 
     { key: "priorityServed",
-      re: /^priority contact\s+(\S+)\s+from\s+(\w+)\s+served after\s+([\d.]+)\s*ms/,
-      take: (m) => ({ id: m[1], sensor: m[2], waitedMs: +m[3] }) },
+      re: /^priority contact\s+(\S+)\s+from\s+(\w+)\s+served after\s+([\d.]+)\s*ms(?:,\s*HIGH: unknown in\s+(\S+))?/,
+      take: (m) => ({ id: m[1], sensor: m[2], waitedMs: +m[3], high: m[4] || null }) },
 
     { key: "contact",
       re: /^contact\s+(\S+)\s+from\s+(\w+)(?:\s+at\s+(-?[\d.]+)\s+(-?[\d.]+),\s*([\d.]+)\s*kn,\s*(\w+))?/,
@@ -93,8 +93,8 @@ const FACTS = [
       take: (m) => ({ busy: +m[1], workers: +m[2], processed: +m[3], queue: +m[4] }) },
 
     { key: "priorityQueued",
-      re: /^priority contact\s+(\S+)\s+from\s+(\w+)\s+queued for the workers/,
-      take: (m) => ({ id: m[1], sensor: m[2] }) },
+      re: /^priority contact\s+(\S+)\s+from\s+(\w+)\s+queued for the workers(?:,\s*HIGH: unknown in\s+(\S+))?/,
+      take: (m) => ({ id: m[1], sensor: m[2], high: m[3] || null }) },
 
     { key: "stalled", re: /^the workers did not stop in\s+(\d+) s/,
       take: (m) => ({ seconds: +m[1] }) },

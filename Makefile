@@ -10,8 +10,8 @@
 #   make bench-health  the TA's bench board, for the Bench view: BENCH=tcp:<address>:4760
 #   make clean         remove build/
 #
-# Each lab Makefile gets CC, CFLAGS and BUILD from here: see Section 7.7 of
-# docs/lab1/lab1_manual.pdf.
+# Each lab Makefile gets CC, CFLAGS and BUILD from here: see Section 4.1 of
+# docs/lab1/lab1_brief.pdf.
 
 CC      := gcc
 CFLAGS  := -std=c11 -D_GNU_SOURCE -Wall -Wextra -Werror -g -O1
@@ -45,7 +45,7 @@ WAITING := $(filter-out $(READY),$(LABS))
 SRC     ?= $(BUILD)/live
 # The sky the four sensors report. `world` is one world seen by all four, so
 # coverage that overlaps reports the same object more than once. `dirty` adds
-# damaged lines, and the Lab 1 manual asks you to run it.
+# damaged lines, and the Lab 1 Brief asks you to run it.
 PROFILE ?= world
 BURST   ?= 250
 PORT    ?= 8080
@@ -98,7 +98,7 @@ test: all
 lab1: programs $(filter src/libsyscall,$(READY))
 	@if [ ! -x "$(BUILD)/demo_lab1" ]; then \
 		echo "build/demo_lab1 does not exist. Your src/libsyscall/Makefile builds it."; \
-		echo "See Section 7.7 of docs/lab1/lab1_manual.pdf."; \
+		echo "See Section 4.1 of docs/lab1/lab1_brief.pdf."; \
 		exit 1; \
 	fi
 	@mkdir -p "$(LIVE)"
@@ -111,16 +111,23 @@ lab1: programs $(filter src/libsyscall,$(READY))
 	@echo
 	@echo "The page shows this run: make watch"
 
-# Lab 1: the acceptance test. tools/bin/ holds it as a compiled object, and
-# this links it with YOUR library, so every check calls your functions. Each
-# check runs in its own process: a crash in one check does not stop the rest.
+# Lab 1: the acceptance test. tools/accept/accept_lab1.c is its source, and
+# this compiles it with YOUR library, so every check calls your functions.
+# Each check runs in its own process: a crash in one check does not stop the
+# rest. Read a check to see what it does, but do not change the file: the
+# marks come from the course copy of it.
+#
+# -Werror is off for this one file. It is course code, and a newer compiler
+# than the course uses can warn about it. A warning in your own code still
+# stops the build.
 accept1: programs $(filter src/libsyscall,$(READY))
 	@if [ ! -f "$(BUILD)/libsyscall.a" ]; then \
 		echo "build/libsyscall.a does not exist. Your src/libsyscall/Makefile builds it."; \
-		echo "See Section 7.7 of docs/lab1/lab1_manual.pdf."; \
+		echo "See Section 4.1 of docs/lab1/lab1_brief.pdf."; \
 		exit 1; \
 	fi
-	$(CC) -o $(BUILD)/accept_lab1 tools/bin/$(ARCH)/accept_lab1.o \
+	$(CC) $(filter-out -Werror,$(CFLAGS)) -Isrc/libsyscall/include -Icommon \
+		-o $(BUILD)/accept_lab1 tools/accept/accept_lab1.c \
 		$(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
 	@$(BUILD)/accept_lab1 --demo $(BUILD)/demo_lab1
 
@@ -196,16 +203,19 @@ bench-sim: programs
 # in build/ from an earlier run, and nowhere else. `make clean` first is what
 # finds that.
 #
+# Only a failed build or a missing file of the hand-in stops it. A test or an
+# acceptance check that fails does not: a student can hand in work that is
+# not complete, and the marks of the acceptance test follow the checks that
+# pass. The result of each one is printed again beside the name of the zip,
+# so that it cannot scroll away unseen.
+#
 # The zip holds your SOURCE, not what you built. build/ is left out because
 # the marker builds your code again from the files in the zip. A prebuilt
 # library in a zip would be marked without ever being compiled from the source
 # beside it, and the two can differ.
 #
-# Everything else stays in, including tools/bin. The zip is then complete on
-# its own: the marker unzips it, runs make, and every command in this file
-# works. Object files are excluded by the build/ rule above, so the one
-# object that survives is tools/bin/<arch>/accept_lab1.o, which make accept1
-# needs.
+# Everything else stays in, including tools/. The zip is then complete on its
+# own: the marker unzips it, runs make, and every command in this file works.
 NAME ?= $(shell id -un)
 ZIP  := sentinel-lab1-$(NAME).zip
 
@@ -215,33 +225,40 @@ submit:
 	@echo "==> building from clean, so that nothing is missing from your Makefile"
 	@$(MAKE) --no-print-directory clean
 	@$(MAKE) --no-print-directory all
-	@echo
-	@echo "==> running your tests"
-	@$(MAKE) --no-print-directory test
-	@echo
-	@echo "==> running the acceptance test"
-	@$(MAKE) --no-print-directory accept1
-	@echo
-	@for f in demo_output.txt missions.log proc_capture.txt; do \
+	@tests=passed; checks=passed; \
+	echo; \
+	echo "==> running your tests"; \
+	$(MAKE) --no-print-directory test || tests=failed; \
+	echo; \
+	echo "==> running the acceptance test"; \
+	$(MAKE) --no-print-directory accept1 || checks=failed; \
+	echo; \
+	for f in demo_output.txt missions.log proc_capture.txt; do \
 		if [ ! -s "docs/lab1/$$f" ]; then \
 			echo "docs/lab1/$$f is missing or empty."; \
-			echo "Section 9 of docs/lab1/lab1_manual.pdf gives the commands that make it."; \
+			echo "Section 6.2 of docs/lab1/lab1_brief.pdf gives the commands that make it."; \
 			exit 1; \
 		fi; \
-	done
-	@rm -f "$(ZIP)"
-	@zip -q -r "$(ZIP)" . \
+	done; \
+	rm -f "$(ZIP)"; \
+	zip -q -r "$(ZIP)" . \
 		-x '*/build/*' 'build/*' '.git/*' '*/.git/*' 'web/live' \
 		   '*.a' '*.d' 'core' 'vgcore.*' '.vscode/*' '*.zip' \
 		-i 'Makefile' 'README.md' '.gitignore' 'common/*' 'docs/*' 'src/*' \
-		   'tools/*' 'web/*'
-	@echo
-	@echo "  $(ZIP)"
-	@echo "  $$(unzip -l "$(ZIP)" | tail -1 | awk '{print $$2}') files, $$(du -h "$(ZIP)" | cut -f1)"
-	@echo
-	@echo "  Upload this file to Brightspace before the deadline."
-	@echo "  Set your name in the file name with: make submit NAME=<your name>"
-
+		   'tools/*' 'web/*' || exit 1; \
+	echo; \
+	echo "  $(ZIP)"; \
+	echo "  $$(unzip -l "$(ZIP)" | tail -1 | awk '{print $$2}') files, $$(du -h "$(ZIP)" | cut -f1)"; \
+	if [ $$tests = failed ]; then \
+		echo "  A test failed. The zip holds your work as it is now."; \
+	fi; \
+	if [ $$checks = failed ]; then \
+		echo "  Some acceptance checks failed. The marks of the acceptance test are in"; \
+		echo "  proportion to the checks that pass."; \
+	fi; \
+	echo; \
+	echo "  Upload this file to Brightspace before the deadline."; \
+	echo "  Set your name in the file name with: make submit NAME=<your name>"
 
 clean:
 	rm -rf $(BUILD)

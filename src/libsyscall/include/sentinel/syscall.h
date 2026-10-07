@@ -140,14 +140,14 @@ typedef struct log log_t;
  * end of the file, and several processes may write the same log at the same
  * time.
  * Only the owner may read or write the file (mode 0600). This is also true
- * when the file existed before with other permissions.
+ * when the file existed before with other permissions. log_open sets this
+ * mode with fchmod() after open(), for each file, new or old.
  */
 /* Errors:
  * path == NULL gives NULL with EINVAL. open() is retried after EINTR, as in
- * sc_open_write. When the mode of an existing file cannot be set to 0600,
- * the log is closed, and the result is NULL with the errno of fchmod(), such
- * as EPERM. Any other failure gives NULL with the errno of the call that
- * failed.
+ * sc_open_write. When the mode cannot be set to 0600, the log is closed,
+ * and the result is NULL with the errno of fchmod(), such as EPERM. Any
+ * other failure gives NULL with the errno of the call that failed.
  */
 log_t *log_open(const char *path);
 
