@@ -13,3 +13,13 @@ vgcore.*
 
 # editor settings
 .vscode/
+
+# Bear / clangd
+compile_commands.json
+.cache/
+
+.venv/
+
+# editor swap files
+*.swp
+*~
