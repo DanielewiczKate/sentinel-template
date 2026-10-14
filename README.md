@@ -22,10 +22,13 @@ machine and your own private copy of this repository.
 | Lab 1 Brief | [`docs/lab1/lab1_brief.pdf`](docs/lab1/lab1_brief.pdf) | The contract of Lab 1 |
 | Lab 1 Guide | [`docs/lab1/lab1_guide.pdf`](docs/lab1/lab1_guide.pdf) | The ideas behind Lab 1 |
 | Lab 1 prelab | [`docs/lab1/prelab1.pdf`](docs/lab1/prelab1.pdf) | The questions to answer before the Lab 1 session |
+| Lab 2 Brief | [`docs/lab2/lab2_brief.pdf`](docs/lab2/lab2_brief.pdf) | The one paper of Lab 2: its contract, its ideas and its hand-in |
+| Lab 2 prelab | [`docs/lab2/prelab2.pdf`](docs/lab2/prelab2.pdf) | The questions to answer before the Lab 2 session |
 | The page | [`web/README.md`](web/README.md) | The operations centre display |
 | Lab 1 directory | [`src/libsyscall/README.md`](src/libsyscall/README.md) | The files that you write for Lab 1 |
+| Lab 2 directory | [`src/libproc/README.md`](src/libproc/README.md) | The files that you write for Lab 2, and the files that the course gives |
 
-When the course releases a later lab, its brief and its guide arrive in `docs/<lab>/`, with
+When the course releases a later lab, its papers arrive in `docs/<lab>/`, with
 `git pull upstream main`.
 
 ## Credit

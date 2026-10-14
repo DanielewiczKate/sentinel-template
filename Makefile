@@ -4,8 +4,11 @@
 #   make test          run the tests of each lab in src/ that has a Makefile
 #   make lab1          run your Lab 1 demo on a new feed, for the page
 #   make accept1       check your Lab 1 library and demo against their contract
+#   make lab2          run the Lab 2 demo with your library, for the page
+#   make accept2       check your Lab 2 library against its contract
 #   make watch         serve the page at http://localhost:8080/
-#   make submit        build, test, and write the zip file you upload to Brightspace
+#   make submit        build, test, and write the zip file of Lab 1 that you upload
+#   make submit LAB=2  the same, for Lab 2
 #   make bench-sim     a simulated bench board on this computer, for the Bench view
 #   make bench-health  the TA's bench board, for the Bench view: BENCH=tcp:<address>:4760
 #   make clean         remove build/
@@ -51,12 +54,19 @@ BURST   ?= 250
 PORT    ?= 8080
 BIND    ?= 127.0.0.1
 BENCH   ?= tcp:127.0.0.1:4760
+# Lab 2: how many processors the centre may use. SENTINEL runs on one. The
+# sensor processes are not restricted: sensor_spawn gives them each processor.
+CPUS    ?= 1
+# Lab 2: how long make lab2 runs, in milliseconds, and the sensor that it
+# kills after 0.5 s (NWS, AUR, AIS or SAT), if one.
+MS      ?= 3000
+KILL    ?=
 SCENARIO ?= demo
 WEB     := $(abspath web)
 LIVE    := $(abspath $(SRC))
 HOSTIP  := $(shell hostname -I 2>/dev/null | awk '{print $$1}')
 
-.PHONY: all test lab1 accept1 watch submit bench-sim bench-health clean common programs $(LABS)
+.PHONY: all test lab1 accept1 lab2 accept2 watch submit bench-sim bench-health clean common programs $(LABS)
 
 all: common programs $(READY)
 	@for d in $(WAITING); do echo "  $$d: no Makefile yet"; done
@@ -130,6 +140,40 @@ accept1: programs $(filter src/libsyscall,$(READY))
 		-o $(BUILD)/accept_lab1 tools/accept/accept_lab1.c \
 		$(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
 	@$(BUILD)/accept_lab1 --demo $(BUILD)/demo_lab1
+
+# Lab 2: the given demo with your library. Each sensor is a process that runs
+# contactfeed, and contactfeed reads the profile from SENTINEL_PROFILE,
+# because sensor_spawn builds its arguments. The old mission log is removed
+# first, and the old feed of Lab 1 too: Lab 2 writes no feed. The files of a
+# later lab are removed too, so that the page shows only this run.
+lab2: programs $(filter src/libproc,$(READY))
+	@if [ ! -x "$(BUILD)/demo_lab2" ]; then \
+		echo "build/demo_lab2 does not exist. Write src/sensor.c, src/prio_channel.c and"; \
+		echo "src/sched.c in src/libproc/, then run make."; \
+		exit 1; \
+	fi
+	@mkdir -p "$(LIVE)"
+	@rm -f "$(LIVE)/feed.txt" "$(LIVE)/missions.log" "$(LIVE)/live.json" "$(LIVE)/tracks.json" \
+		"$(LIVE)/run.json"
+	SENTINEL_PROFILE=$(PROFILE) $(BUILD)/demo_lab2 --sched priority --ms $(MS) --cpus $(CPUS) \
+		--log "$(LIVE)/missions.log" --expected common/traffic.txt \
+		$(if $(KILL),--kill-sensor $(KILL))
+	@echo
+	@echo "The page shows this run: make watch"
+
+# Lab 2: the acceptance test, as accept1. tools/accept/accept_lab2.c is its
+# source, and this compiles it with YOUR libproc.a and libsyscall.a. The
+# given code of src/libproc/given/ is in your libproc.a too.
+accept2: programs $(filter src/libproc,$(READY))
+	@if [ ! -f "$(BUILD)/libproc.a" ]; then \
+		echo "build/libproc.a does not exist. Write src/sensor.c, src/prio_channel.c and"; \
+		echo "src/sched.c in src/libproc/, then run make."; \
+		exit 1; \
+	fi
+	$(CC) $(filter-out -Werror,$(CFLAGS)) -Isrc/libproc/include -Isrc/libsyscall/include -Icommon \
+		-o $(BUILD)/accept_lab2 tools/accept/accept_lab2.c \
+		$(BUILD)/libproc.a $(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
+	@$(BUILD)/accept_lab2 --demo $(BUILD)/demo_lab2
 
 # The page reads files over HTTP. A page opened as a file cannot read them, so
 # a small server is necessary. web/live is a link to the run directory.
@@ -217,9 +261,18 @@ bench-sim: programs
 # Everything else stays in, including tools/. The zip is then complete on its
 # own: the marker unzips it, runs make, and every command in this file works.
 NAME ?= $(shell id -un)
-ZIP  := sentinel-lab1-$(NAME).zip
+LAB  ?= 1
+ZIP  := sentinel-lab$(LAB)-$(NAME).zip
+
+# The files of one run that each lab adds to the zip, and the section of its
+# brief that gives the commands that make them.
+HANDIN_1  := demo_output.txt missions.log proc_capture.txt
+HANDIN_2  := demo_output.txt missions.log proc_capture.txt
+SECTION_1 := Section 6.2 of docs/lab1/lab1_brief.pdf
+SECTION_2 := Section 6 of docs/lab2/lab2_brief.pdf
 
 submit:
+	@case "$(LAB)" in 1|2) ;; *) echo "LAB must be 1 or 2"; exit 2 ;; esac
 	@command -v zip >/dev/null 2>&1 || { \
 		echo "zip is not installed. Install it with: sudo apt install zip"; exit 1; }
 	@echo "==> building from clean, so that nothing is missing from your Makefile"
@@ -231,12 +284,12 @@ submit:
 	$(MAKE) --no-print-directory test || tests=failed; \
 	echo; \
 	echo "==> running the acceptance test"; \
-	$(MAKE) --no-print-directory accept1 || checks=failed; \
+	$(MAKE) --no-print-directory accept$(LAB) || checks=failed; \
 	echo; \
-	for f in demo_output.txt missions.log proc_capture.txt; do \
-		if [ ! -s "docs/lab1/$$f" ]; then \
-			echo "docs/lab1/$$f is missing or empty."; \
-			echo "Section 6.2 of docs/lab1/lab1_brief.pdf gives the commands that make it."; \
+	for f in $(HANDIN_$(LAB)); do \
+		if [ ! -s "docs/lab$(LAB)/$$f" ]; then \
+			echo "docs/lab$(LAB)/$$f is missing or empty."; \
+			echo "$(SECTION_$(LAB)) gives the commands that make it."; \
 			exit 1; \
 		fi; \
 	done; \

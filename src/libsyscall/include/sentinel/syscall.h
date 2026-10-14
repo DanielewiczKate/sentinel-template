@@ -20,7 +20,10 @@
 
 /* ------------------------------------------------------------------ io.c */
 
-/* Open path for reading. Returns a file descriptor. */
+/* Open path for reading. Returns a file descriptor.
+ * The descriptor has O_CLOEXEC: a program that this process or its child
+ * starts with exec does not get it. Lab 2 requires this flag; the Lab 1
+ * tests do not check it. */
 /* Errors:
  * open() is retried after EINTR. Any other failure gives -1 with the errno
  * of open(), such as ENOENT or EACCES.
@@ -35,6 +38,7 @@ int sc_open_read(const char *path);
  *                 processes write the same file at the same time. The content
  *                 that the file holds already stays.
  *   append == 0   the existing content is removed when the file opens.
+ * The descriptor has O_CLOEXEC, as in sc_open_read. Lab 2 requires it.
  */
 /* Errors:
  * open() is retried after EINTR. Any other failure gives -1 with the errno
