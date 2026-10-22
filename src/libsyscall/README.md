@@ -19,5 +19,4 @@ Read these papers:
 3. [`docs/submit/submit.pdf`](../../docs/submit/submit.pdf), the Submission Guide: how to hand
    in the lab.
 4. [`docs/lab1/lab1_primer.pdf`](../../docs/lab1/lab1_primer.pdf), the Lab 1 Primer: how to
-   write a Makefile and a test with `assert`, what a wrapper function is, and what `proc.c`
-   reads in `/proc`.
+   write a Makefile and a test with `assert`, and what `proc.c` reads in `/proc`.
