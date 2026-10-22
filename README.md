@@ -21,6 +21,7 @@ machine and your own private copy of this repository.
 | Submission Guide | [`docs/submit/submit.pdf`](docs/submit/submit.pdf) | The marks and the deadlines of each lab, the oral exam, the Lab 4 video, and how to hand in a lab |
 | Lab 1 Brief | [`docs/lab1/lab1_brief.pdf`](docs/lab1/lab1_brief.pdf) | The contract of Lab 1 |
 | Lab 1 Guide | [`docs/lab1/lab1_guide.pdf`](docs/lab1/lab1_guide.pdf) | The ideas behind Lab 1 |
+| Lab 1 Primer | [`docs/lab1/lab1_primer.pdf`](docs/lab1/lab1_primer.pdf) | `make` and your Makefile, tests with `assert`, wrapper functions, and `/proc` for `proc.c` |
 | Lab 1 prelab | [`docs/lab1/prelab1.pdf`](docs/lab1/prelab1.pdf) | The questions to answer before the Lab 1 session |
 | Lab 2 Brief | [`docs/lab2/lab2_brief.pdf`](docs/lab2/lab2_brief.pdf) | The one paper of Lab 2: its contract, its ideas and its hand-in |
 | Lab 2 prelab | [`docs/lab2/prelab2.pdf`](docs/lab2/prelab2.pdf) | The questions to answer before the Lab 2 session |
