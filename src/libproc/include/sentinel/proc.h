@@ -350,9 +350,15 @@ typedef struct {
     const char *region;            /* the region of a HIGH report, or NULL */
 } pending_t;
 
-typedef struct sched sched_t;   /* you define struct sched in src/sched.c */
+typedef struct sched sched_t;   /* struct sched is in src/sched.c */
 
-/* ------------------------------------------------ YOURS, in src/sched.c */
+/* ------------------------------------------------ in src/sched.c
+ *
+ * src/sched.c comes from the course with struct sched and sched_next
+ * written: they hold the three policies. Do not change them. YOU write
+ * sched_create, sched_destroy, sched_push and sched_pending in the same
+ * file, with the fields of struct sched.
+ */
 
 /* Make an empty scheduler.
  *
@@ -381,8 +387,8 @@ void sched_destroy(sched_t *s);
  */
 int sched_push(sched_t *s, const pending_t *p);
 
-/* Take the next report, as the policy chooses, out of s, and copy it to
- * *out.
+/* GIVEN in src/sched.c. Take the next report, as the policy chooses, out
+ * of s, and copy it to *out.
  *
  *   POLICY_FCFS      the report that was pushed first.
  *   POLICY_PRIORITY  the report with the highest pending_urgency (GIVEN):

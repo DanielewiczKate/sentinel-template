@@ -5,7 +5,8 @@ This directory is Lab 2. You write its code in `src/` and `tests/`.
 | Path | Who writes it |
 |---|---|
 | `include/sentinel/proc.h` | The course. It states what each function does, in order, with each of its errors and its log lines. Do not change a declaration |
-| `src/sensor.c`, `src/prio_channel.c`, `src/sched.c` | You: the functions that `proc.h` marks YOURS, each in the file that `proc.h` names |
+| `src/sensor.c`, `src/prio_channel.c` | You: the functions that `proc.h` marks YOURS, each in the file that `proc.h` names |
+| `src/sched.c` | The course wrote `struct sched` and `sched_next`. You: `sched_create`, `sched_destroy`, `sched_push` and `sched_pending` |
 | `tests/test_sched.c`, and `tests/test_sensor.c` or `tests/test_prio.c` | You: two tests |
 | `given/` | The course: the channel reader, the loop of the centre, the class HIGH, the names of the policies, and the demo. Read them; do not change them |
 | `Makefile` | The course |
