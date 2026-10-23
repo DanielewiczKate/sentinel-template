@@ -5,9 +5,10 @@ This directory is Lab 3. You write its code in `src/` and `tests/`.
 | Path | Who writes it |
 |---|---|
 | `include/sentinel/ipc.h` | The course. It states what each function does, in order, with each of its errors and its log lines. Do not change a declaration |
-| `src/queue.c`, `src/track.c`, `src/pool.c` | You: the functions that `ipc.h` marks YOURS, each in the file that `ipc.h` names |
-| `tests/test_queue.c`, `tests/test_track.c` | You: two tests, each with one thread |
-| `given/` | The course: the readers of the queue, the table of the track picture, the instruments and the hooks of the pool, association, validation, the cost of a report, and the demo. Read them; do not change them |
+| `src/queue.c` | You: the five functions. Each one is a stub, with its steps in a comment |
+| `src/pool.c` | The course wrote `free_pool()` and `start_failed()`. You: `pool_create_deadline`, `pool_stop` and `pool_destroy`. Each one is a stub, with its steps in a comment |
+| `tests/test_queue.c` | The course wrote the first case. You: the three other cases, with one thread |
+| `given/` | The course: the worker loop, `track_update` and the track picture, the readers of the queue, the instruments of the pool, association, validation, the cost of a report, and the demo. Read them; do not change them |
 | `Makefile` | The course |
 
 Lab 3 uses your Lab 1 and Lab 2 libraries. Do not add a lock, an atomic variable or a

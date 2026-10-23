@@ -15,9 +15,10 @@
  * Lab 3 measures what that costs, and Lab 4 adds the protection.
  *
  * WHO WRITES WHAT. You write the functions marked YOURS, in the file that
- * each section names: src/queue.c, src/track.c and src/pool.c. The
- * functions marked GIVEN are in src/libipc/given/. You read them, and you
- * do not change them. Do not change a declaration in this file: the tests
+ * each section names: src/queue.c and src/pool.c. Each one arrives as a
+ * stub, with its steps in a comment. The functions marked GIVEN are in
+ * src/libipc/given/, or in the GIVEN part of src/pool.c. You read them, and
+ * you do not change them. Do not change a declaration in this file: the tests
  * that mark your lab call each function as it is declared here.
  *
  * Each function that has a log writes to the mission log through
@@ -190,9 +191,11 @@ typedef struct {
     long total_evicted;
 } track_t;
 
-/* -------------------------------------------------- YOURS, in src/track.c */
+/* --------------------------------------------- GIVEN, in given/track_table.c */
 
-/* Apply one report: update the track of its contact, or create the track.
+/* GIVEN. Apply one report: update the track of its contact, or create the
+ * track. Each worker calls it, with no lock: this is the read, change and
+ * write that Lab 4 protects.
  *
  * Input: t from track_init, and c. c->id is the identity of the contact.
  * What it does:
@@ -221,8 +224,6 @@ typedef struct {
  * step 4 is not undone.
  */
 int  track_update(track_t *t, const contact_t *c);
-
-/* --------------------------------------------- GIVEN, in given/track_table.c */
 
 /* GIVEN. Prepare an empty picture: each bucket NULL, each total 0.
  * Returns 0, or -1 with EINVAL when t is NULL. */
@@ -448,7 +449,7 @@ typedef struct {
 /* --------------------------------------------------- YOURS, in src/pool.c */
 
 /* Start a pool of n_workers threads. They take reports from q and apply
- * them to t.
+ * them to t. Each thread runs pool_worker_main (GIVEN, below).
  *
  * Input: n_workers (1 or more), q from queue_init, t from track_init,
  * service_us (the work of one report, 0 or less for none), late_ms (the
@@ -459,30 +460,12 @@ typedef struct {
  *        late_ms and log.
  *     2. Call pool_calibrate(p), BEFORE the first thread starts.
  *     3. For each i from 0: set workers[i].pool to p and workers[i].index to
- *        i. Start the thread with pthread_create(&tids[i], NULL, worker,
- *        &workers[i]). Each thread gets the address of ITS OWN block.
- *     4. Write this line at level SYSTEM:
+ *        i. Start the thread with pthread_create(&tids[i], NULL,
+ *        pool_worker_main, &workers[i]). Each thread gets the address of
+ *        ITS OWN block. When pthread_create gives rc != 0, return
+ *        start_failed(p, i, rc) (GIVEN in src/pool.c).
+ *     4. When log is not NULL, write this line at level SYSTEM:
  *            worker pool started: N workers, US us, deadline MS ms
- *
- * THE WORKER is a static function of pool.c. Its argument is its block,
- * w, and it returns NULL. Its steps:
- *     1. Call pool_worker_start(w).
- *     2. While p->stop is 0: take a report with queue_pop. When the queue
- *        is empty, call usleep(200) and start the turn again. Do not spin
- *        with no wait: on one processor, a spin takes the processor from
- *        the thread that fills the queue.
- *     3. After the stop, take each report that is still in the queue, until
- *        queue_pop gives 0. This is the DRAIN. A stop does not discard a
- *        report that waits.
- *     4. For each report of step 2 or step 3:
- *          - when pool_report_late(p, &item) gives 1, add 1 to
- *            w->stats.late, and do not apply it;
- *          - if not, call pool_report_begin(w, &item, draining, &r), where
- *            draining is 1 in step 3 and 0 in step 2; then
- *            created = track_update(p->track, &item.c); then
- *            pool_report_end(w, &item, created, &r). Add 1 to
- *            w->stats.processed. Add 1 to new_tracks when created is 1,
- *            and to updates when created is 0.
  *
  * Output: the pool.
  */
@@ -490,17 +473,15 @@ typedef struct {
  * n_workers <= 0, q == NULL or t == NULL: NULL with EINVAL.
  * An allocation fails: NULL with ENOMEM. Free what was allocated.
  * pool_calibrate fails: NULL with EAGAIN. Free each allocation.
- * pthread_create fails for thread i: set p->stop to 1, join threads 0 to
- * i - 1, free each allocation, and give NULL with errno set to the value
- * that pthread_create returned. No thread of the pool runs after it. The
- * threads that started drain the queue before they return: the reports
- * that waited are applied, not lost.
+ * pthread_create fails for thread i: start_failed sets p->stop to 1, joins
+ * threads 0 to i - 1, frees each allocation, and gives NULL with errno set
+ * to the value that pthread_create returned. No thread of the pool runs
+ * after it.
  *
  * CALLS THAT NEED NO CHECK in pool.c, each with a comment that says why
  * (the rule of Lab 1): pthread_join() of a thread of this pool that no
- * other code joins; log_writef(), because a lost log line is not an
- * error of the pool; and usleep(200), because the loop tries the queue
- * again after it returns, also after EINTR.
+ * other code joins, and log_writef(), because a lost log line is not an
+ * error of the pool.
  */
 pool_t *pool_create_deadline(int n_workers, queue_t *q, track_t *t,
                              int service_us, int late_ms, log_t *log);
@@ -509,25 +490,41 @@ pool_t *pool_create_deadline(int n_workers, queue_t *q, track_t *t,
  *
  * Input: p from pool_create_deadline.
  * What it does: set p->stop to 1. Call pthread_join for each thread: each
- * worker drains the queue, and then returns. Then write this line at level
- * SYSTEM, where N is pool_total_processed(p):
+ * worker drains the queue, and then returns. Then, when p->log is not NULL,
+ * write this line at level SYSTEM, where N is pool_total_processed(p):
  *     worker pool stopped: N processed
  * Call it ONE time for a pool. p == NULL does nothing.
  */
 void pool_stop(pool_t *p);
 
-/* Free the thread ids, the argument blocks and the pool. Call it after
- * pool_stop. p == NULL does nothing. */
+/* Free the thread ids, the argument blocks and the pool: call free_pool(p)
+ * (GIVEN in src/pool.c). Call it after pool_stop. p == NULL does nothing. */
 void pool_destroy(pool_t *p);
 
-/* The sum of stats.processed over each worker. p == NULL gives 0. */
+/* ---------------------------------------------- GIVEN, in given/pool_watch.c */
+
+/* GIVEN. The thread function of each worker. arg is its block,
+ * &workers[i]. Its steps:
+ *     1. Call pool_worker_start(w).
+ *     2. While p->stop is 0: take a report with queue_pop. When the queue
+ *        is empty, call usleep(200) and try again.
+ *     3. After the stop, take each report that is still in the queue,
+ *        until queue_pop gives 0. This is the DRAIN: a stop does not discard
+ *        a report that waits.
+ *     4. For each report: when pool_report_late gives 1, add 1 to
+ *        w->stats.late. If not, pool_report_begin, track_update,
+ *        pool_report_end, and add 1 to w->stats.processed, and to
+ *        new_tracks (track_update gave 1) or updates (it gave 0).
+ * Returns NULL. */
+void *pool_worker_main(void *arg);
+
+/* GIVEN. The sum of stats.processed over each worker. p == NULL gives 0. */
 long pool_total_processed(const pool_t *p);
 
-/* The sum of stats.late over each worker: reports taken from the queue and
- * then dropped, because they waited past the deadline. p == NULL gives 0. */
+/* GIVEN. The sum of stats.late over each worker: reports taken from the
+ * queue and then dropped, because they waited past the deadline. p == NULL
+ * gives 0. */
 long pool_total_late(const pool_t *p);
-
-/* ---------------------------------------------- GIVEN, in given/pool_watch.c */
 
 /* GIVEN. pool_create_deadline with late_ms POOL_LATE_DEFAULT_MS. */
 pool_t *pool_create(int n_workers, queue_t *q, track_t *t, int service_us,

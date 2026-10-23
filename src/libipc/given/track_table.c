@@ -4,10 +4,10 @@
  * table finds the record: the identity is a short string, track_bucket()
  * gives its bucket, and a short chain starts there.
  *
- * Your src/track.c holds track_update, the read, change and write that each
- * worker does. This file holds the rest: the start and the end of the table,
- * the search, the totals, the independent count, and the eviction that
- * keeps the table inside TRACK_MAX_ENTRIES.
+ * This file holds track_update, the read, change and write that each worker
+ * does, and the rest: the start and the end of the table, the search, the
+ * totals, the independent count, and the eviction that keeps the table
+ * inside TRACK_MAX_ENTRIES.
  *
  * Nothing here locks. track_find and track_count_entries walk the chains,
  * and a worker that adds an entry at the same time can leave a pointer
@@ -180,4 +180,95 @@ long track_count_entries(const track_t *t)
 long track_total_evicted(const track_t *t)
 {
     return t == NULL ? 0 : t->total_evicted;
+}
+
+/* track_update: one report into the track picture.
+ *
+ * A report about a contact that the picture knows UPDATES its record. It
+ * does not add a second record. That makes the table a picture of what is
+ * out there, and not a log of reports.
+ *
+ * WHAT LAB 4 MUST PROTECT. track_update is a read, change and write on
+ * shared state:
+ *
+ *     find the entry            (read)
+ *     change its fields         (change)
+ *     add to the totals         (write)
+ *
+ * No step is atomic, and the insert into a chain is worse. Two threads can
+ * read the same head of a bucket, link their new entry to it, and store
+ * their own entry as the head. One of the two entries is then lost, and
+ * nothing reports it. This function has no lock: that is the state that
+ * Lab 3 gives to Lab 4.
+ */
+int track_update(track_t *t, const contact_t *c)
+{
+    if (t == NULL || c == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    size_t         b = track_bucket(c->id);
+    track_entry_t *e = t->buckets[b];
+    while (e != NULL && strcmp(e->id, c->id) != 0) {
+        e = e->next;
+    }
+
+    int64_t now = sc_now_ns();
+    int     urgent = (c->flag == PRIORITY_PRIORITY);
+
+    if (e != NULL) {
+        /* Update. Read, change, write: on state that another thread can
+           change at the same time. */
+        e->lat          = c->lat;
+        e->lon          = c->lon;
+        e->speed        = c->speed;
+        e->reports++;
+        e->last_seen_ns = now;
+        e->last_flag    = urgent ? 'P' : 'R';
+        memcpy(e->sensor, c->sensor, CONTACT_SENSOR_LEN + 1);
+
+        if (urgent && !e->priority) {
+            e->priority = 1;
+            t->priority_tracks++;
+        }
+        t->total_reports++;
+        return 0;
+    }
+
+    /* A new contact, so the picture grows. Make room first when it is
+       full. */
+    if (t->total_tracks >= TRACK_MAX_ENTRIES) {
+        track_evict_one(t, b);
+    }
+
+    e = calloc(1, sizeof *e);
+    if (e == NULL) {
+        errno = ENOMEM;
+        return -1;
+    }
+    memcpy(e->id, c->id, CONTACT_ID_MAX + 1);
+    memcpy(e->sensor, c->sensor, CONTACT_SENSOR_LEN + 1);
+    e->lat           = c->lat;
+    e->lon           = c->lon;
+    e->speed         = c->speed;
+    e->reports       = 1;
+    e->priority      = urgent;
+    e->last_flag     = urgent ? 'P' : 'R';
+    e->first_seen_ns = now;
+    e->last_seen_ns  = now;
+
+    /* Link it at the head of the bucket. Two threads that do this at the
+       same time on one bucket lose one of the two entries: both read the
+       same old head, both point at it, and the second store replaces the
+       first. */
+    e->next       = t->buckets[b];
+    t->buckets[b] = e;
+
+    t->total_tracks++;
+    t->total_reports++;
+    if (urgent) {
+        t->priority_tracks++;
+    }
+    return 1;
 }

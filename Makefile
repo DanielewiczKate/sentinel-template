@@ -8,7 +8,6 @@
 #   make accept2       check your Lab 2 library against its contract
 #   make lab3          run the Lab 3 demo with your library, for the page
 #   make accept3       check your Lab 3 library against its contract
-#   make lab3-tsan     build the Lab 3 demo with ThreadSanitizer, for the hand-in
 #   make watch         serve the page at http://localhost:8080/
 #   make submit        build, test, and write the zip file of Lab 1 that you upload
 #   make submit LAB=2  the same, for Lab 2 (LAB=3 for Lab 3)
@@ -71,7 +70,7 @@ WEB     := $(abspath web)
 LIVE    := $(abspath $(SRC))
 HOSTIP  := $(shell hostname -I 2>/dev/null | awk '{print $$1}')
 
-.PHONY: all test lab1 accept1 lab2 accept2 lab3 accept3 lab3-tsan watch submit bench-sim bench-health clean common programs $(LABS)
+.PHONY: all test lab1 accept1 lab2 accept2 lab3 accept3 watch submit bench-sim bench-health clean common programs $(LABS)
 
 all: common programs $(READY)
 	@for d in $(WAITING); do echo "  $$d: no Makefile yet"; done
@@ -184,7 +183,7 @@ accept2: programs $(filter src/libproc,$(READY))
 # live.json while it runs, and tracks.json at the end, for the page.
 lab3: programs $(filter src/libipc,$(READY))
 	@if [ ! -x "$(BUILD)/demo_lab3" ]; then \
-		echo "build/demo_lab3 does not exist. Write src/queue.c, src/track.c and src/pool.c"; \
+		echo "build/demo_lab3 does not exist. Write src/queue.c and src/pool.c"; \
 		echo "in src/libipc/, then run make."; \
 		exit 1; \
 	fi
@@ -201,7 +200,7 @@ lab3: programs $(filter src/libipc,$(READY))
 # with YOUR libipc.a, libproc.a and libsyscall.a. Threads need -pthread.
 accept3: programs $(filter src/libipc,$(READY))
 	@if [ ! -f "$(BUILD)/libipc.a" ]; then \
-		echo "build/libipc.a does not exist. Write src/queue.c, src/track.c and src/pool.c"; \
+		echo "build/libipc.a does not exist. Write src/queue.c and src/pool.c"; \
 		echo "in src/libipc/, then run make."; \
 		exit 1; \
 	fi
@@ -209,23 +208,6 @@ accept3: programs $(filter src/libipc,$(READY))
 		-Isrc/libsyscall/include -Icommon -o $(BUILD)/accept_lab3 tools/accept/accept_lab3.c \
 		$(BUILD)/libipc.a $(BUILD)/libproc.a $(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
 	@$(BUILD)/accept_lab3 --demo $(BUILD)/demo_lab3
-
-# Lab 3: the demo with ThreadSanitizer, build/demo_lab3_tsan. Only the code of
-# Lab 3 is instrumented, because the races are there. Your libraries of Labs 1
-# and 2 are linked as they are. Section 6 of docs/lab3/lab3_brief.pdf gives
-# the run.
-TSAN_IPC := $(wildcard src/libipc/src/*.c) $(filter-out %/demo_lab3.c,$(wildcard src/libipc/given/*.c))
-lab3-tsan: programs $(filter src/libipc,$(READY))
-	@if [ ! -f "$(BUILD)/libipc.a" ]; then \
-		echo "build/libipc.a does not exist. Write src/queue.c, src/track.c and src/pool.c"; \
-		echo "in src/libipc/, then run make."; \
-		exit 1; \
-	fi
-	$(CC) $(filter-out -Werror,$(CFLAGS)) -fsanitize=thread -pthread \
-		-Isrc/libipc/include -Isrc/libproc/include -Isrc/libsyscall/include -Icommon \
-		-DSENTINEL_BUILD_DIR=\"$(BUILD)\" -o $(BUILD)/demo_lab3_tsan \
-		src/libipc/given/demo_lab3.c $(TSAN_IPC) \
-		$(BUILD)/libproc.a $(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
 
 # The page reads files over HTTP. A page opened as a file cannot read them, so
 # a small server is necessary. web/live is a link to the run directory.
@@ -320,7 +302,7 @@ ZIP  := sentinel-lab$(LAB)-$(NAME).zip
 # brief that gives the commands that make them.
 HANDIN_1  := demo_output.txt missions.log proc_capture.txt
 HANDIN_2  := demo_output.txt missions.log proc_capture.txt
-HANDIN_3  := demo_1worker.txt demo_8workers.txt tsan.txt
+HANDIN_3  := demo_1worker.txt demo_8workers.txt
 SECTION_1 := Section 6.2 of docs/lab1/lab1_brief.pdf
 SECTION_2 := Section 6 of docs/lab2/lab2_brief.pdf
 SECTION_3 := Section 6 of docs/lab3/lab3_brief.pdf

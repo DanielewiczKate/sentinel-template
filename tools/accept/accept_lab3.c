@@ -4,9 +4,9 @@
  *
  * `make accept3` compiles this file with your build/libipc.a, your
  * build/libproc.a, your build/libsyscall.a and build/libcommon.a. So each
- * call to a queue_*, track_* or pool_* function below runs your code, or the
- * given code of src/libipc/given/. Then the test runs build/demo_lab3 as a
- * program. It prints PASS or FAIL for each of 23 checks, then the share that
+ * call to a queue_* or pool_* function below runs your code, or the given
+ * code of src/libipc/given/. Then the test runs build/demo_lab3 as a
+ * program. It prints PASS or FAIL for each of 14 checks, then the share that
  * passed for each file.
  *
  * Read a check to see what it does. Do not change this file. The marks come
@@ -275,11 +275,6 @@ static pending_t pend_n(long n)
     return pend("NWS", id, 0, URGENCY_ROUTINE);
 }
 
-static contact_t contact(const char *id, int p_flag)
-{
-    return pend("AIS", id, p_flag, URGENCY_ROUTINE).c;
-}
-
 /* Put n reports into q, with n_distinct ids. */
 static void fill(queue_t *q, long n, long n_distinct)
 {
@@ -465,160 +460,6 @@ static void q_errors(void)
     queue_destroy(&q);
 }
 
-/* =============================================================== track.c */
-
-static void t_create(void)
-{
-    track_t t;
-    CHECK(track_init(&t) == 0, "track_init failed");
-    contact_t c = contact("ACCF-1", 0);
-    c.lat = 61.5; c.lon = -110.25; c.speed = 420.0;
-    int64_t before = sc_now_ns();
-    CHECK(track_update(&t, &c) == 1, "track_update of a new id must give 1");
-    const track_entry_t *e = track_find(&t, "ACCF-1");
-    CHECK(e != NULL, "after track_update, track_find(\"ACCF-1\") gives NULL. The entry must "
-          "be in the chain of bucket track_bucket(id)");
-    CHECK(strcmp(e->sensor, "AIS") == 0, "the sensor of the track is \"%s\", not AIS", e->sensor);
-    CHECK(e->lat == 61.5 && e->lon == -110.25 && e->speed == 420.0, "the track does not hold "
-          "the lat, lon and speed of the report");
-    CHECK(e->reports == 1, "a new track has reports %ld, not 1", e->reports);
-    CHECK(e->priority == 0 && e->last_flag == 'R', "a routine report gave priority %d and "
-          "last_flag '%c', not 0 and 'R'", e->priority, e->last_flag ? e->last_flag : '?');
-    CHECK(e->first_seen_ns >= before && e->last_seen_ns == e->first_seen_ns,
-          "first_seen_ns and last_seen_ns of a new track must both be sc_now_ns()");
-    CHECK(t.total_tracks == 1 && t.total_reports == 1 && t.priority_tracks == 0,
-          "after one new track, the totals are %ld tracks, %ld reports, %ld priority, not "
-          "1, 1 and 0", t.total_tracks, t.total_reports, t.priority_tracks);
-    track_destroy(&t);
-}
-
-static void t_update(void)
-{
-    track_t t;
-    CHECK(track_init(&t) == 0, "track_init failed");
-    contact_t c = contact("ACCF-2", 0);
-    CHECK(track_update(&t, &c) == 1, "the first report of ACCF-2 must give 1");
-    const track_entry_t *e = track_find(&t, "ACCF-2");
-    CHECK(e != NULL, "track_find(\"ACCF-2\") gives NULL");
-    int64_t first = e->first_seen_ns;
-    sleep_ms(2);
-    c.lat = 62.0; c.lon = -111.0; c.speed = 380.0;
-    snprintf(c.sensor, sizeof c.sensor, "SAT");
-    CHECK(track_update(&t, &c) == 0, "a second report of ACCF-2 must give 0: it updates the "
-          "track");
-    CHECK(track_update(&t, &c) == 0, "a third report of ACCF-2 must give 0");
-    CHECK(track_count_entries(&t) == 1, "after 3 reports of one id, the table holds %ld "
-          "entries, not 1. A known id must update its entry", track_count_entries(&t));
-    e = track_find(&t, "ACCF-2");
-    CHECK(e->reports == 3, "after 3 reports, reports is %ld", e->reports);
-    CHECK(e->lat == 62.0 && e->lon == -111.0 && e->speed == 380.0 &&
-          strcmp(e->sensor, "SAT") == 0, "the update did not copy lat, lon, speed and sensor");
-    CHECK(e->first_seen_ns == first && e->last_seen_ns > first, "an update must change "
-          "last_seen_ns, and keep first_seen_ns");
-    CHECK(t.total_tracks == 1 && t.total_reports == 3, "after 3 reports of one id, the "
-          "totals are %ld tracks and %ld reports, not 1 and 3", t.total_tracks,
-          t.total_reports);
-    track_destroy(&t);
-}
-
-static void t_chain(void)
-{
-    track_t t;
-    CHECK(track_init(&t) == 0, "track_init failed");
-    /* Find three ids in one bucket. */
-    char   ids[3][32];
-    int    found = 0;
-    size_t b0 = track_bucket("SAME-0");
-    snprintf(ids[found++], sizeof ids[0], "SAME-0");
-    for (int n = 1; found < 3 && n < 1000000; n++) {
-        char id[32];
-        snprintf(id, sizeof id, "SAME-%d", n);
-        if (track_bucket(id) == b0) {
-            snprintf(ids[found++], sizeof ids[0], "%s", id);
-        }
-    }
-    CHECK(found == 3, "the test cannot find three ids in one bucket");
-    for (int round = 0; round < 2; round++) {
-        for (int i = 0; i < 3; i++) {
-            contact_t c = contact(ids[i], 0);
-            int rc = track_update(&t, &c);
-            CHECK(rc == (round == 0 ? 1 : 0), "%s, in a bucket with %d other ids, gave %d, "
-                  "not %d. Compare the whole id with strcmp in each entry of the chain",
-                  ids[i], 2, rc, round == 0 ? 1 : 0);
-        }
-    }
-    CHECK(track_count_entries(&t) == 3 && t.total_tracks == 3 && t.total_reports == 6,
-          "three ids in one bucket, two reports each, gave %ld entries, %ld tracks and %ld "
-          "reports, not 3, 3 and 6", track_count_entries(&t), t.total_tracks, t.total_reports);
-    CHECK(t.buckets[b0] != NULL && strcmp(t.buckets[b0]->id, ids[2]) == 0, "the newest track "
-          "must be at the HEAD of its chain");
-    track_destroy(&t);
-}
-
-static void t_priority(void)
-{
-    track_t t;
-    CHECK(track_init(&t) == 0, "track_init failed");
-    contact_t r = contact("ACCF-3", 0), p = contact("ACCF-3", 1);
-    CHECK(track_update(&t, &r) == 1, "the first report must give 1");
-    CHECK(t.priority_tracks == 0, "a routine track counts as priority");
-    CHECK(track_update(&t, &p) == 0, "the second report must give 0");
-    const track_entry_t *e = track_find(&t, "ACCF-3");
-    CHECK(e->priority == 1 && e->last_flag == 'P', "after a P report, priority is %d and "
-          "last_flag '%c', not 1 and 'P'", e->priority, e->last_flag ? e->last_flag : '?');
-    CHECK(t.priority_tracks == 1, "after a P report, priority_tracks is %ld, not 1",
-          t.priority_tracks);
-    CHECK(track_update(&t, &p) == 0 && track_update(&t, &r) == 0, "the updates must give 0");
-    CHECK(t.priority_tracks == 1, "after 3 P reports of ONE track, priority_tracks is %ld. "
-          "It counts tracks, not reports: add 1 only when priority changes from 0 to 1",
-          t.priority_tracks);
-    CHECK(e->priority == 1 && e->last_flag == 'R', "after a routine report, priority must stay "
-          "1 and last_flag must be 'R'");
-    contact_t np = contact("ACCF-4", 1);
-    CHECK(track_update(&t, &np) == 1, "a new P track must give 1");
-    CHECK(t.priority_tracks == 2 && track_find(&t, "ACCF-4")->priority == 1,
-          "a new track from a P report must count in priority_tracks");
-    track_destroy(&t);
-}
-
-static void t_evict(void)
-{
-    track_t t;
-    CHECK(track_init(&t) == 0, "track_init failed");
-    char id[32];
-    for (long i = 0; i < TRACK_MAX_ENTRIES + 50; i++) {
-        snprintf(id, sizeof id, "MANY-%ld", i);
-        contact_t c = contact(id, 0);
-        CHECK(track_update(&t, &c) == 1, "new id %s gave no 1", id);
-        CHECK(t.total_tracks <= TRACK_MAX_ENTRIES, "the picture holds %ld tracks, more than "
-              "TRACK_MAX_ENTRIES. Call track_evict_one before you create a track in a full "
-              "picture", t.total_tracks);
-    }
-    CHECK(t.total_tracks == TRACK_MAX_ENTRIES && track_count_entries(&t) == TRACK_MAX_ENTRIES,
-          "a full picture holds %ld tracks (%ld walked), not %d", t.total_tracks,
-          track_count_entries(&t), TRACK_MAX_ENTRIES);
-    CHECK(track_total_evicted(&t) == 50, "50 tracks past the limit gave %ld evictions, not 50",
-          track_total_evicted(&t));
-    CHECK(t.total_reports == TRACK_MAX_ENTRIES + 50, "total_reports is %ld", t.total_reports);
-    track_destroy(&t);
-}
-
-static void t_errors(void)
-{
-    track_t   t;
-    contact_t c = contact("X-1", 0);
-    CHECK(track_init(&t) == 0, "track_init failed");
-    errno = 0;
-    CHECK(track_update(NULL, &c) == -1 && errno == EINVAL, "track_update(NULL, c) must give "
-          "-1 with EINVAL");
-    errno = 0;
-    CHECK(track_update(&t, NULL) == -1 && errno == EINVAL, "track_update(t, NULL) must give "
-          "-1 with EINVAL");
-    CHECK(t.total_reports == 0 && track_count_entries(&t) == 0, "a call that gave EINVAL "
-          "changed the picture");
-    track_destroy(&t);
-}
-
 /* ================================================================ pool.c */
 
 static void p_threads(void)
@@ -708,28 +549,6 @@ static void p_one_worker_exact(void)
     track_destroy(&t);
 }
 
-static void p_drains(void)
-{
-    queue_t q;
-    track_t t;
-    CHECK(queue_init(&q, 1000) == 0 && track_init(&t) == 0, "the test cannot start");
-    fill(&q, 400, 400);
-    g_gate_open = 0;
-    pool_t *p = pool_create_deadline(1, &q, &t, 0, 0, NULL);
-    CHECK(p != NULL, "pool_create_deadline(1, ...) failed: %s", strerror(errno));
-    p->stop = 1;               /* before the worker takes its first step */
-    g_gate_open = 1;
-    pool_stop(p);
-    CHECK(queue_count(&q) == 0, "the stop flag was set before the workers started, and %zu "
-          "of 400 reports were still in the queue after pool_stop. After the stop, the worker "
-          "must take each report that is left in the queue", queue_count(&q));
-    CHECK(pool_total_processed(p) == 400, "after the drain, %ld of 400 reports were "
-          "processed", pool_total_processed(p));
-    pool_destroy(p);
-    queue_destroy(&q);
-    track_destroy(&t);
-}
-
 static void p_stop_joins(void)
 {
     one_processor();
@@ -750,73 +569,6 @@ static void p_stop_joins(void)
     /* A joined thread can stay in /proc for a moment after pthread_join. */
     CHECK(threads_become(base, 100), "100 ms after pool_stop, %d worker threads still ran. "
           "pool_stop must call pthread_join for each thread", thread_count() - base);
-    pool_destroy(p);
-    queue_destroy(&q);
-    track_destroy(&t);
-}
-
-static void p_idle(void)
-{
-    one_processor();
-    queue_t q;
-    track_t t;
-    CHECK(queue_init(&q, 64) == 0 && track_init(&t) == 0, "the test cannot start");
-    pool_t *p = pool_create_deadline(4, &q, &t, 0, 0, NULL);
-    CHECK(p != NULL, "pool_create_deadline(4, ...) failed: %s", strerror(errno));
-    sleep_ms(50);
-    struct timespec c0, c1, w0, w1;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c0);
-    clock_gettime(CLOCK_MONOTONIC, &w0);
-    sleep_ms(500);
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c1);
-    clock_gettime(CLOCK_MONOTONIC, &w1);
-    double cpu  = (c1.tv_sec - c0.tv_sec) + (c1.tv_nsec - c0.tv_nsec) / 1e9;
-    double wall = (w1.tv_sec - w0.tv_sec) + (w1.tv_nsec - w0.tv_nsec) / 1e9;
-    pool_stop(p);
-    pool_destroy(p);
-    CHECK(cpu / wall < 0.5, "with an empty queue, 4 workers used %.2f of a processor. A "
-          "worker must call usleep(200) when the queue is empty, and not try again at once",
-          cpu / wall);
-    queue_destroy(&q);
-    track_destroy(&t);
-}
-
-static void p_late(void)
-{
-    queue_t q;
-    track_t t;
-    CHECK(queue_init(&q, 64) == 0 && track_init(&t) == 0, "the test cannot start");
-    int64_t old = sc_now_ns() - 2000000000LL;    /* 2 s ago */
-    for (int i = 0; i < 10; i++) {
-        char id[16];
-        snprintf(id, sizeof id, "R-%d", i);
-        pending_t r = pend("NWS", id, 0, URGENCY_ROUTINE);
-        r.arrived_ns = old;
-        CHECK(queue_push(&q, &r) == 0, "queue_push failed");
-        snprintf(id, sizeof id, "P-%d", i);
-        pending_t s = pend("NWS", id, i % 2, i % 2 ? URGENCY_SENSOR : URGENCY_HIGH);
-        s.arrived_ns = old;
-        CHECK(queue_push(&q, &s) == 0, "queue_push failed");
-    }
-    for (int i = 0; i < 5; i++) {
-        pending_t fresh = pend_n(100 + i);
-        CHECK(queue_push(&q, &fresh) == 0, "queue_push failed");
-    }
-    g_gate_open = 0;
-    pool_t *p = pool_create_deadline(1, &q, &t, 0, 1000, NULL);
-    CHECK(p != NULL, "pool_create_deadline(..., late_ms 1000) failed: %s", strerror(errno));
-    p->stop = 1;
-    g_gate_open = 1;
-    pool_stop(p);
-    CHECK(pool_total_late(p) == 10, "10 routine reports waited 2 s with a deadline of 1 s, "
-          "and %ld were counted late. Use pool_report_late, and add 1 to stats.late",
-          pool_total_late(p));
-    CHECK(pool_total_processed(p) == 15, "%ld reports were applied, not 15: the 10 urgent "
-          "reports (P and HIGH) are never late, and 5 reports were fresh",
-          pool_total_processed(p));
-    CHECK(track_find(&t, "P-0") != NULL && track_find(&t, "P-1") != NULL, "an urgent report "
-          "that waited 2 s is not in the picture");
-    CHECK(track_find(&t, "R-0") == NULL, "a late routine report is in the picture");
     pool_destroy(p);
     queue_destroy(&q);
     track_destroy(&t);
@@ -972,19 +724,10 @@ static const struct check kChecks[] = {
     { "queue.c", "a full queue gives ENOSPC, counts it, and keeps its reports", q_full },
     { "queue.c", "pushed, popped and peak", q_stats },
     { "queue.c", "queue_init, queue_push and queue_pop give EINVAL", q_errors },
-    { "track.c", "a new id creates a track with the fields of the report", t_create },
-    { "track.c", "a known id updates its track, and adds no entry", t_update },
-    { "track.c", "ids in one bucket: the chain, and the head", t_chain },
-    { "track.c", "priority_tracks counts tracks, not reports; last_flag follows", t_priority },
-    { "track.c", "a full picture removes the oldest track before it creates one", t_evict },
-    { "track.c", "track_update gives EINVAL", t_errors },
     { "pool.c", "pool_create_deadline starts N threads, and pool_stop ends them", p_threads },
     { "pool.c", "each worker gets its own argument block", p_own_block },
     { "pool.c", "one worker applies each report: the picture is exact", p_one_worker_exact },
-    { "pool.c", "after the stop, the workers drain the queue", p_drains },
     { "pool.c", "pool_stop returns after each worker returned", p_stop_joins },
-    { "pool.c", "a worker waits when the queue is empty, and does not spin", p_idle },
-    { "pool.c", "the deadline drops a late routine report, and never an urgent one", p_late },
     { "pool.c", "the SYSTEM lines, and a step line for each report", p_log },
     { "pool.c", "pool_create_deadline gives EINVAL, and NULL is safe", p_errors },
     { "pool.c", "a failed pthread_create: NULL, its errno, and no thread left", p_create_fails },

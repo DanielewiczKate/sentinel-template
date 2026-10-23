@@ -6,11 +6,10 @@
 #   demo_lab3    from given/demo_lab3.c
 #   each test    from tests/test_*.c (your tests)
 #
-# Until your three files exist (src/queue.c, src/track.c and src/pool.c),
-# it compiles each file that exists, so that you see the errors of the
-# compiler, and it names the files that are missing. It builds no library,
-# demo or test until all three exist: the given code calls each of your
-# functions, so nothing could link.
+# Until your two files exist (src/queue.c and src/pool.c), it compiles each
+# file that exists, so that you see the errors of the compiler, and it names
+# the files that are missing. It builds no library, demo or test until both
+# exist: the given code calls each of your functions, so nothing could link.
 #
 # Lab 3 uses your Lab 2 library, build/libproc.a, and your Lab 1 library,
 # build/libsyscall.a. The top-level Makefile builds them first.
@@ -32,7 +31,7 @@ TEST_DEFS := -DSENTINEL_BUILD_DIR=\"$(BUILD)\"
 LIB  := $(BUILD)/libipc.a
 ODIR := $(BUILD)/libipc
 
-YOURS    := src/queue.c src/track.c src/pool.c
+YOURS    := src/queue.c src/pool.c
 MISSING  := $(filter-out $(wildcard $(YOURS)),$(YOURS))
 
 DEMO_SRC := given/demo_lab3.c
@@ -62,7 +61,7 @@ else
 
 all: $(OBJS)
 	@echo "  src/libipc: Lab 3 is not complete. Write $(MISSING)."
-	@echo "  No library, demo or test is built until each of your three files exists."
+	@echo "  No library, demo or test is built until each of your two files exists."
 
 test: all
 

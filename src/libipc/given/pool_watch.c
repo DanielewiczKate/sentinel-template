@@ -1,19 +1,22 @@
-/* pool_watch.c — GIVEN. The instruments of the worker pool, and the rules
- * that are not a part of Lab 3.
+/* pool_watch.c — GIVEN. The worker loop, the instruments of the worker pool,
+ * and the rules that are not a part of Lab 3.
  *
- * Your src/pool.c starts the threads, runs the worker loop and stops the
- * pool. This file holds what the course needs to measure the pool, and what
- * the page shows:
+ * Your src/pool.c starts the threads and stops the pool. This file holds the
+ * thread function that each worker runs, and what the course needs to
+ * measure the pool and to show it on the page:
  *
+ *   pool_worker_main    the worker loop: take a report, apply it, and drain
+ *                       the queue after the stop
  *   pool_worker_start   a worker records its own thread id
  *   pool_report_late    the report deadline (R2: an urgent report is never late)
  *   pool_report_begin   the step log line, the two clocks, and the work
  *   pool_report_end     the second step log line, and the span of the report
  *   pool_calibrate      measure the work, one time, before a thread starts
  *
- * and the readers: the CPU time, the busy time, the thread id and the spans
- * of each worker. No reader and no hook locks anything. Lab 3 is the lab with
- * no protection, and Lab 4 copies the same numbers under a lock.
+ * and the readers: the totals, the CPU time, the busy time, the thread id
+ * and the spans of each worker. No reader and no hook locks anything. Lab 3
+ * is the lab with no protection, and Lab 4 copies the same numbers under a
+ * lock.
  */
 
 #include "sentinel/ipc.h"
@@ -245,4 +248,96 @@ int pool_worker_spans(const pool_t *p, int i, work_span_t *out, int max)
         out[k] = w->spans[(start + (int)k) % WORKER_SPANS];
     }
     return (int)have;
+}
+
+/* ---------------------------------------------------- the worker loop */
+
+/* Apply one report, from the loop or from the drain. */
+static void handle(pool_worker_t *w, const pending_t *item, int draining)
+{
+    pool_t *p = w->pool;
+
+    if (pool_report_late(p, item)) {
+        w->stats.late++;
+        return;
+    }
+
+    pool_report_t r;
+    pool_report_begin(w, item, draining, &r);
+
+    /* NOT PROTECTED. This is the read, change and write that Lab 4
+       protects. */
+    int created = track_update(p->track, &item->c);
+
+    pool_report_end(w, item, created, &r);
+
+    /* The statistics of this worker. Only this thread writes them, so they
+       are exact when the shared state is wrong. */
+    w->stats.processed++;
+    if (created == 1) {
+        w->stats.new_tracks++;
+    } else if (created == 0) {
+        w->stats.updates++;
+    }
+}
+
+void *pool_worker_main(void *arg)
+{
+    pool_worker_t *w = arg;
+    pool_t        *p = w->pool;
+
+    pool_worker_start(w);
+
+    /* stop is volatile sig_atomic_t, for the reason of the SIGCHLD flag of
+       Lab 2: with no volatile, the compiler can keep the flag in a
+       register, and this loop then never sees the change. */
+    while (!p->stop) {
+        pending_t item;
+
+        /* NOT PROTECTED. Two workers can be in queue_pop at the same time.
+           Both read the same head and both return the same report, or both
+           take 1 from the count for one report. */
+        if (queue_pop(p->queue, &item) != 1) {
+            /* The queue is empty now. Wait 200 us, and do not spin at full
+               speed: on one processor, a spin takes the processor from the
+               thread that fills the queue. Lab 4 uses a semaphore. */
+            usleep(200);
+            continue;
+        }
+        handle(w, &item, 0);
+    }
+
+    /* The drain: empty the queue, so that a stop does not discard the
+       reports that wait in it. */
+    pending_t item;
+    while (queue_pop(p->queue, &item) == 1) {
+        handle(w, &item, 1);
+    }
+    return NULL;
+}
+
+/* ---------------------------------------------------- the totals */
+
+long pool_total_processed(const pool_t *p)
+{
+    if (p == NULL) {
+        return 0;
+    }
+    long n = 0;
+    for (int i = 0; i < p->n_workers; i++) {
+        n += p->workers[i].stats.processed;
+    }
+    return n;
+}
+
+long pool_total_late(const pool_t *p)
+{
+    if (p == NULL) {
+        return 0;
+    }
+    long n = 0;
+    for (int i = 0; i < p->n_workers; i++) {
+        n += p->workers[i].stats.late;
+    }
+    return n;
 }
