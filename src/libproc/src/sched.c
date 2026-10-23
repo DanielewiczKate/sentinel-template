@@ -124,13 +124,28 @@ int sched_next(sched_t *s, pending_t *out)
 /* ------------------------------------------------ YOURS: write these four
  *
  * proc.h states what each function does, and each of its errors. Use the
- * fields of struct sched above: sched_next reads them. Read man 3 malloc
- * and man 3 free.
+ * fields of struct sched above: sched_next reads them. Read man 3 malloc,
+ * man 3 calloc and man 3 free.
  *
  * Each function below is a stub: it sets errno to ENOSYS and fails, so
- * that the library builds before you write it. Replace each body.
+ * that the library builds before you write it. Replace each body. The
+ * comment above each function gives its steps.
  */
 
+/* sched_create: make an empty scheduler.
+ *
+ *   1. If policy is not POLICY_FCFS, POLICY_PRIORITY or POLICY_RR, set
+ *      errno to EINVAL and return NULL.
+ *   2. If capacity is 0, use 4096.
+ *   3. s = malloc(sizeof *s). If it gives NULL, return NULL: malloc has
+ *      set errno to ENOMEM.
+ *   4. s->slots = calloc(capacity, sizeof *s->slots). calloc gives NULL
+ *      with ENOMEM when capacity times the size does not fit in size_t, so
+ *      it makes the ENOMEM check of proc.h for you (man 3 calloc). If it
+ *      gives NULL: save errno, free(s), put errno back, and return NULL.
+ *   5. Set s->policy, s->capacity, s->count = 0 and s->rr_next = 0.
+ *   6. Return s.
+ */
 sched_t *sched_create(sched_policy_t policy, size_t capacity)
 {
     (void)policy;
@@ -139,11 +154,26 @@ sched_t *sched_create(sched_policy_t policy, size_t capacity)
     return NULL;
 }
 
+/* sched_destroy: free the scheduler.
+ *
+ *   1. If s is NULL, return. That is not an error.
+ *   2. free(s->slots), then free(s). Free the array first: after
+ *      free(s), s->slots cannot be read.
+ */
 void sched_destroy(sched_t *s)
 {
     (void)s;
 }
 
+/* sched_push: add a copy of *p at the end.
+ *
+ *   1. If s or p is NULL, set errno to EINVAL and return -1.
+ *   2. If s->count equals s->capacity, set errno to ENOSPC and return -1.
+ *      Do not change s.
+ *   3. Copy the report into the first free slot: s->slots[s->count] = *p.
+ *      The = of a struct copies each field.
+ *   4. Add 1 to s->count, and return 0.
+ */
 int sched_push(sched_t *s, const pending_t *p)
 {
     (void)s;
@@ -152,6 +182,11 @@ int sched_push(sched_t *s, const pending_t *p)
     return -1;
 }
 
+/* sched_pending: how many reports wait.
+ *
+ *   1. If s is NULL, return 0.
+ *   2. Return s->count.
+ */
 size_t sched_pending(const sched_t *s)
 {
     (void)s;
