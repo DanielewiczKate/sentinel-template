@@ -27,10 +27,14 @@ machine and your own private copy of this repository.
 | Lab 2 prelab | [`docs/lab2/prelab2.pdf`](docs/lab2/prelab2.pdf) | The questions to answer before the Lab 2 session |
 | Lab 3 Brief | [`docs/lab3/lab3_brief.pdf`](docs/lab3/lab3_brief.pdf) | The one paper of Lab 3: its contract, its ideas and its hand-in |
 | Lab 3 prelab | [`docs/lab3/prelab3.pdf`](docs/lab3/prelab3.pdf) | The questions to answer before the Lab 3 session |
+| Lab 4 Brief | [`docs/lab4/lab4_brief.pdf`](docs/lab4/lab4_brief.pdf) | The one paper of Lab 4: its contract, its ideas, its hand-in and the video |
+| Lab 4 prelab | [`docs/lab4/prelab4.pdf`](docs/lab4/prelab4.pdf) | The questions to answer before the Lab 4 session |
 | The page | [`web/README.md`](web/README.md) | The operations centre display |
 | Lab 1 directory | [`src/libsyscall/README.md`](src/libsyscall/README.md) | The files that you write for Lab 1 |
 | Lab 2 directory | [`src/libproc/README.md`](src/libproc/README.md) | The files that you write for Lab 2, and the files that the course gives |
 | Lab 3 directory | [`src/libipc/README.md`](src/libipc/README.md) | The files that you write for Lab 3, and the files that the course gives |
+| Lab 4 directory | [`src/libsync/README.md`](src/libsync/README.md) | The files that you write for Lab 4, and the files that the course gives |
+| The final program | [`src/sentinel/README.md`](src/sentinel/README.md) | The program of all four labs, which Lab 4 runs |
 
 When the course releases a later lab, its papers arrive in `docs/<lab>/`, with
 `git pull upstream main`.

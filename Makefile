@@ -8,9 +8,11 @@
 #   make accept2       check your Lab 2 library against its contract
 #   make lab3          run the Lab 3 demo with your library, for the page
 #   make accept3       check your Lab 3 library against its contract
+#   make lab4          run the final program with your libraries, for the page
+#   make accept4       check your Lab 4 library and the final program against their contract
 #   make watch         serve the page at http://localhost:8080/
 #   make submit        build, test, and write the zip file of Lab 1 that you upload
-#   make submit LAB=2  the same, for Lab 2 (LAB=3 for Lab 3)
+#   make submit LAB=2  the same, for Lab 2 (LAB=3 for Lab 3, LAB=4 for Lab 4)
 #   make bench-sim     a simulated bench board on this computer, for the Bench view
 #   make bench-health  the TA's bench board, for the Bench view: BENCH=tcp:<address>:4760
 #   make clean         remove build/
@@ -70,7 +72,7 @@ WEB     := $(abspath web)
 LIVE    := $(abspath $(SRC))
 HOSTIP  := $(shell hostname -I 2>/dev/null | awk '{print $$1}')
 
-.PHONY: all test lab1 accept1 lab2 accept2 lab3 accept3 watch submit bench-sim bench-health clean common programs $(LABS)
+.PHONY: all test lab1 accept1 lab2 accept2 lab3 accept3 lab4 accept4 watch submit bench-sim bench-health clean common programs $(LABS)
 
 all: common programs $(READY)
 	@for d in $(WAITING); do echo "  $$d: no Makefile yet"; done
@@ -209,6 +211,39 @@ accept3: programs $(filter src/libipc,$(READY))
 		$(BUILD)/libipc.a $(BUILD)/libproc.a $(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
 	@$(BUILD)/accept_lab3 --demo $(BUILD)/demo_lab3
 
+# Lab 4: the final program, build/sentinel, with your four libraries, as lab3.
+# It writes the mission log, live.json while it runs, and tracks.json at the
+# end, for the page.
+lab4: programs $(filter src/sentinel,$(READY))
+	@if [ ! -x "$(BUILD)/sentinel" ]; then \
+		echo "build/sentinel does not exist. Write src/safetrack.c, src/sem_queue.c and"; \
+		echo "src/resources.c in src/libsync/, then run make."; \
+		exit 1; \
+	fi
+	@mkdir -p "$(LIVE)"
+	@rm -f "$(LIVE)/feed.txt" "$(LIVE)/missions.log" "$(LIVE)/live.json" "$(LIVE)/tracks.json" \
+		"$(LIVE)/run.json"
+	SENTINEL_PROFILE=$(PROFILE) $(BUILD)/sentinel --workers $(WORKERS) --ms $(MS) --cpus $(CPUS) \
+		--log "$(LIVE)/missions.log" --live "$(LIVE)/live.json" --tracks "$(LIVE)/tracks.json" \
+		--expected common/traffic.txt
+	@echo
+	@echo "The page shows this run: make watch"
+
+# Lab 4: the acceptance test, as accept3. It compiles tools/accept/accept_lab4.c
+# with YOUR libsync.a and the three libraries below it, and it runs
+# build/sentinel. Threads need -pthread.
+accept4: programs $(filter src/sentinel,$(READY))
+	@if [ ! -f "$(BUILD)/libsync.a" ] || [ ! -x "$(BUILD)/sentinel" ]; then \
+		echo "build/libsync.a or build/sentinel does not exist. Write src/safetrack.c,"; \
+		echo "src/sem_queue.c and src/resources.c in src/libsync/, then run make."; \
+		exit 1; \
+	fi
+	$(CC) $(filter-out -Werror,$(CFLAGS)) -pthread -Isrc/libsync/include -Isrc/libipc/include \
+		-Isrc/libproc/include -Isrc/libsyscall/include -Icommon -o $(BUILD)/accept_lab4 \
+		tools/accept/accept_lab4.c $(BUILD)/libsync.a $(BUILD)/libipc.a $(BUILD)/libproc.a \
+		$(BUILD)/libsyscall.a $(BUILD)/libcommon.a -lm
+	@$(BUILD)/accept_lab4 --sentinel $(BUILD)/sentinel
+
 # The page reads files over HTTP. A page opened as a file cannot read them, so
 # a small server is necessary. web/live is a link to the run directory.
 #
@@ -303,12 +338,14 @@ ZIP  := sentinel-lab$(LAB)-$(NAME).zip
 HANDIN_1  := demo_output.txt missions.log proc_capture.txt
 HANDIN_2  := demo_output.txt missions.log proc_capture.txt
 HANDIN_3  := demo_1worker.txt demo_8workers.txt
+HANDIN_4  := sentinel_8workers.txt
 SECTION_1 := Section 6.2 of docs/lab1/lab1_brief.pdf
 SECTION_2 := Section 6 of docs/lab2/lab2_brief.pdf
 SECTION_3 := Section 6 of docs/lab3/lab3_brief.pdf
+SECTION_4 := Section 6 of docs/lab4/lab4_brief.pdf
 
 submit:
-	@case "$(LAB)" in 1|2|3) ;; *) echo "LAB must be 1, 2 or 3"; exit 2 ;; esac
+	@case "$(LAB)" in 1|2|3|4) ;; *) echo "LAB must be 1, 2, 3 or 4"; exit 2 ;; esac
 	@command -v zip >/dev/null 2>&1 || { \
 		echo "zip is not installed. Install it with: sudo apt install zip"; exit 1; }
 	@echo "==> building from clean, so that nothing is missing from your Makefile"
@@ -347,6 +384,10 @@ submit:
 	fi; \
 	echo; \
 	echo "  Upload this file to Brightspace before the deadline."; \
+	if [ "$(LAB)" = 4 ]; then \
+		echo "  Upload your video with it: an MP4 file of at most 5 minutes. Section 6.2"; \
+		echo "  of docs/lab4/lab4_brief.pdf gives its script."; \
+	fi; \
 	echo "  Set your name in the file name with: make submit NAME=<your name>"
 
 clean:
