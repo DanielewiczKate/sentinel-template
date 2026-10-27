@@ -29,6 +29,17 @@
  *
  * The names, the start, the end and the naive order are given, in
  * given/resources_setup.c.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * sync.h, ipc.h and syscall.h.
+ *
+ *   pthread_mutex_lock(),    man 3 pthread_mutex_lock
+ *   pthread_mutex_unlock()
+ *       https://man7.org/linux/man-pages/man3/pthread_mutex_lock.3p.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
  */
 
 #include "sentinel/sync.h"

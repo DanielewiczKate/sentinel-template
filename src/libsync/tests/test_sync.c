@@ -4,6 +4,24 @@
  * main(). Write the body of each other test function: the comment above it
  * gives what to check. Each check is an assert(). make test builds and runs
  * this file.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * sync.h, ipc.h and syscall.h.
+ *
+ *   assert()                 man 3 assert
+ *       https://man7.org/linux/man-pages/man3/assert.3.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
+ *   pthread_create()         man 3 pthread_create
+ *       https://man7.org/linux/man-pages/man3/pthread_create.3.html
+ *   pthread_join()           man 3 pthread_join
+ *       https://man7.org/linux/man-pages/man3/pthread_join.3.html
+ *   snprintf()               man 3 snprintf
+ *       https://man7.org/linux/man-pages/man3/snprintf.3.html
+ *   strcmp()                 man 3 strcmp
+ *       https://man7.org/linux/man-pages/man3/strcmp.3.html
  */
 
 #include "sentinel/sync.h"

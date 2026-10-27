@@ -5,8 +5,8 @@
  * function is a stub now: it fails, so that the library builds before you
  * write it. Replace the whole body of each stub, its (void) lines too.
  * Lecture 4.2 (Process Management) shows fork, exec and wait, and lecture
- * 4.4 (Programming IPC) shows pipe. Read also man 2 pipe2, man 2 dup2,
- * man 2 waitpid and man 2 kill.
+ * 4.4 (Programming IPC) shows pipe. MAN PAGES, at the end of this comment,
+ * names the manual page of each call.
  *
  * sensor_spawn puts four system calls together, in this order:
  *
@@ -19,6 +19,47 @@
  * The order is necessary. fork() copies only the descriptors that exist at
  * that time. If fork() comes before pipe2(), the child and the centre each
  * make a different pipe, and nothing connects them.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * proc.h, syscall.h and common/cpu.h.
+ *
+ *   snprintf()               man 3 snprintf
+ *       https://man7.org/linux/man-pages/man3/snprintf.3.html
+ *   pipe2()                  man 2 pipe2
+ *       https://man7.org/linux/man-pages/man2/pipe2.2.html
+ *   fflush()                 man 3 fflush
+ *       https://man7.org/linux/man-pages/man3/fflush.3.html
+ *   fork()                   man 2 fork
+ *       https://man7.org/linux/man-pages/man2/fork.2.html
+ *   dup2()                   man 2 dup2
+ *       https://man7.org/linux/man-pages/man2/dup2.2.html
+ *   fcntl(), F_SETFD         man 2 fcntl
+ *       https://man7.org/linux/man-pages/man2/fcntl.2.html
+ *   signal(), SIG_IGN        man 2 signal
+ *       https://man7.org/linux/man-pages/man2/signal.2.html
+ *   SIGPIPE, SIGTERM         man 7 signal
+ *       https://man7.org/linux/man-pages/man7/signal.7.html
+ *   execvp()                 man 3 execvp
+ *       https://man7.org/linux/man-pages/man3/execvp.3.html
+ *   _exit()                  man 2 _exit
+ *       https://man7.org/linux/man-pages/man2/_exit.2.html
+ *   exit()                   man 3 exit
+ *       https://man7.org/linux/man-pages/man3/exit.3.html
+ *   close()                  man 2 close
+ *       https://man7.org/linux/man-pages/man2/close.2.html
+ *   kill()                   man 2 kill
+ *       https://man7.org/linux/man-pages/man2/kill.2.html
+ *   waitpid(), WNOHANG,      man 2 waitpid
+ *   WIFSIGNALED(),
+ *   WTERMSIG(),
+ *   WEXITSTATUS()
+ *       https://man7.org/linux/man-pages/man2/waitpid.2.html
+ *   strsignal()              man 3 strsignal
+ *       https://man7.org/linux/man-pages/man3/strsignal.3.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
  */
 
 #include "sentinel/proc.h"

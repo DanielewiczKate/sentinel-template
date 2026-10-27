@@ -5,8 +5,8 @@
  * each one gives its steps, and proc.h gives the same function with each
  * error. Each one is a stub now: it fails, so that the library builds
  * before you write it. Replace the whole body of each stub, its (void) lines
- * too. Lecture 4.4 (Programming IPC) shows mkfifo; read also man 3 mkfifo,
- * man 2 open (O_NONBLOCK) and man 7 pipe (PIPE_BUF).
+ * too. Lecture 4.4 (Programming IPC) shows mkfifo. MAN PAGES, at the end
+ * of this comment, names the manual page of each call.
  *
  * The sensor pipes carry the reports of the four processes that the centre
  * started. The priority channel is different: it has a name in the file
@@ -24,6 +24,35 @@
  *    FILE, not "empty". poll() then marks the channel each time, and the
  *    centre turns in its loop with no wait. So the centre holds a write end
  *    itself (fd_hold), and an empty FIFO is only empty.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * proc.h, syscall.h and common/cpu.h.
+ *
+ *   memset()                 man 3 memset
+ *       https://man7.org/linux/man-pages/man3/memset.3.html
+ *   strlen()                 man 3 strlen
+ *       https://man7.org/linux/man-pages/man3/strlen.3.html
+ *   memcpy()                 man 3 memcpy
+ *       https://man7.org/linux/man-pages/man3/memcpy.3.html
+ *   unlink()                 man 2 unlink
+ *       https://man7.org/linux/man-pages/man2/unlink.2.html
+ *   mkfifo()                 man 3 mkfifo
+ *       https://man7.org/linux/man-pages/man3/mkfifo.3.html
+ *   chmod()                  man 2 chmod
+ *       https://man7.org/linux/man-pages/man2/chmod.2.html
+ *   open(), O_NONBLOCK,      man 2 open
+ *   O_CLOEXEC
+ *       https://man7.org/linux/man-pages/man2/open.2.html
+ *   poll()                   man 2 poll
+ *       https://man7.org/linux/man-pages/man2/poll.2.html
+ *   a FIFO                   man 7 fifo
+ *       https://man7.org/linux/man-pages/man7/fifo.7.html
+ *   a pipe, PIPE_BUF         man 7 pipe
+ *       https://man7.org/linux/man-pages/man7/pipe.7.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
  */
 
 #include "sentinel/proc.h"

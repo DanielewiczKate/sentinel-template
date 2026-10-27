@@ -22,6 +22,21 @@
  * The three policies use one array of waiting reports, slots[0] to
  * slots[count - 1], in the order of arrival. Only the choice of the report
  * to remove is different.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * proc.h, syscall.h and common/cpu.h.
+ *
+ *   malloc(), calloc(),      man 3 malloc
+ *   free()
+ *       https://man7.org/linux/man-pages/man3/malloc.3.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
+ *   memmove()                man 3 memmove
+ *       https://man7.org/linux/man-pages/man3/memmove.3.html
+ *   strcmp()                 man 3 strcmp
+ *       https://man7.org/linux/man-pages/man3/strcmp.3.html
  */
 
 #include "sentinel/proc.h"
@@ -124,8 +139,8 @@ int sched_next(sched_t *s, pending_t *out)
 /* ------------------------------------------------ YOURS: write these four
  *
  * proc.h states what each function does, and each of its errors. Use the
- * fields of struct sched above: sched_next reads them. Read man 3 malloc,
- * man 3 calloc and man 3 free.
+ * fields of struct sched above: sched_next reads them. MAN PAGES, at the
+ * top of this file, names the manual page of each call.
  *
  * Each function below is a stub: it sets errno to ENOSYS and fails, so
  * that the library builds before you write it. Replace each body. The

@@ -5,8 +5,8 @@
  * "YOURS". The comment above each one gives its steps, and ipc.h gives the
  * same steps with the errors. Each one is a stub now: it fails, so that the
  * library builds before you write it. Replace each body. Lecture 4.5
- * (Threads) shows pthread_create and pthread_join; read also
- * man 3 pthread_create and man 3 pthread_join.
+ * (Threads) shows pthread_create and pthread_join. MAN PAGES, at the end
+ * of this comment, names the manual page of each call.
  *
  * N threads take reports from the same queue and apply them to the same
  * track picture. Each thread runs pool_worker_main, which is given in
@@ -20,6 +20,23 @@
  * its OWN argument block, &workers[i]. With the address of one shared
  * variable, each thread reads the value that the variable has when that
  * thread runs.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * ipc.h, proc.h and syscall.h.
+ *
+ *   malloc(), calloc(),      man 3 malloc
+ *   free()
+ *       https://man7.org/linux/man-pages/man3/malloc.3.html
+ *   pthread_create()         man 3 pthread_create
+ *       https://man7.org/linux/man-pages/man3/pthread_create.3.html
+ *   pthread_join()           man 3 pthread_join
+ *       https://man7.org/linux/man-pages/man3/pthread_join.3.html
+ *   threads                  man 7 pthreads
+ *       https://man7.org/linux/man-pages/man7/pthreads.7.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
  */
 
 #include "sentinel/ipc.h"

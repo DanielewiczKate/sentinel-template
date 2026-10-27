@@ -4,6 +4,26 @@
  * and main(). Write the body of each other test function: the comment above
  * it gives what to check. Each check is an assert(). make test builds and
  * runs this file.
+ *
+ * MAN PAGES. Each call of the C library and of Linux in this file, the
+ * command that shows its manual page in a terminal, and the same page on
+ * the web. The functions of the course have no man page: read them in
+ * proc.h, syscall.h and common/cpu.h.
+ *
+ *   assert()                 man 3 assert
+ *       https://man7.org/linux/man-pages/man3/assert.3.html
+ *   errno, error names       man 3 errno
+ *       https://man7.org/linux/man-pages/man3/errno.3.html
+ *   stat()                   man 2 stat
+ *       https://man7.org/linux/man-pages/man2/stat.2.html
+ *   S_ISFIFO()               man 7 inode
+ *       https://man7.org/linux/man-pages/man7/inode.7.html
+ *   usleep()                 man 3 usleep
+ *       https://man7.org/linux/man-pages/man3/usleep.3.html
+ *   poll()                   man 2 poll
+ *       https://man7.org/linux/man-pages/man2/poll.2.html
+ *   strcmp()                 man 3 strcmp
+ *       https://man7.org/linux/man-pages/man3/strcmp.3.html
  */
 
 #include "sentinel/proc.h"
