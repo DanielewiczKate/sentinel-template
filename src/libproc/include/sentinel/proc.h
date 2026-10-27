@@ -246,7 +246,10 @@ typedef struct {
  * Input: ch, a prio_channel_t that the caller owns; path, the name of the
  * FIFO. demo_lab2 uses /tmp/sentinel_priority.fifo.
  * What it does, in this order:
- *   1. Set ch->fd and ch->fd_hold to -1, and copy path into ch->path.
+ *   1. Set ch->fd and ch->fd_hold to -1, and ch->path to "". If path has
+ *      256 or more characters, fail with ENAMETOOLONG (Errors, below), so
+ *      that the copy cannot pass the end of ch->path. Then copy path into
+ *      ch->path.
  *   2. Remove an entry that exists at path with unlink(). Its error is not
  *      checked: there is usually no entry.
  *   3. Create the FIFO with mkfifo(path, 0600). Then set the mode with

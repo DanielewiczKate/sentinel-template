@@ -95,7 +95,7 @@ static void open_failed(prio_channel_t *ch)
  *      one that the senders open.
  *   4. Copy path into ch->path, with its '\0'.
  *   5. unlink(path). An entry from an earlier run can have the wrong mode.
- *      No check: usually there is no entry. Write a comment that says why.
+ *      No check: usually there is no entry.
  *   6. mkfifo(path, 0600). If it fails: ch->path[0] = '\0', and return -1.
  *   7. chmod(path, 0600): the umask can change the mode of mkfifo, and
  *      chmod makes it exact. If it fails: open_failed(ch), return -1.

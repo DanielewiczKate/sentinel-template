@@ -478,8 +478,8 @@ typedef struct {
  * to the value that pthread_create returned. No thread of the pool runs
  * after it.
  *
- * CALLS THAT NEED NO CHECK in pool.c, each with a comment that says why
- * (the rule of Lab 1): pthread_join() of a thread of this pool that no
+ * CALLS THAT NEED NO CHECK in pool.c, and why. They need no branch and no
+ * comment: pthread_join() of a thread of this pool that no
  * other code joins, and log_writef(), because a lost log line is not an
  * error of the pool.
  */

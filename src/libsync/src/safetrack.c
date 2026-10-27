@@ -68,8 +68,8 @@ int safe_track_init(safe_track_t *st)
  *
  *   1. If st is NULL, return.
  *   2. track_destroy(&st->track).
- *   3. pthread_mutex_destroy(&st->lock). No check: write a comment that
- *      says why (sync.h, CALLS THAT NEED NO CHECK).
+ *   3. pthread_mutex_destroy(&st->lock). No check: sync.h, CALLS THAT NEED
+ *      NO CHECK, gives the reason.
  */
 void safe_track_destroy(safe_track_t *st)
 {
@@ -84,8 +84,8 @@ void safe_track_destroy(safe_track_t *st)
  *   4. pthread_mutex_unlock(&st->lock).
  *   5. Return rc.
  *   The lock covers the whole call of track_update, and nothing more.
- *   No check of the lock and the unlock: write a comment that says why
- *   (sync.h, CALLS THAT NEED NO CHECK).
+ *   No check of the lock and the unlock: sync.h, CALLS THAT NEED NO CHECK,
+ *   gives the reason.
  */
 int safe_track_update(safe_track_t *st, const contact_t *c)
 {

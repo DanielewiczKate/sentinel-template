@@ -54,8 +54,8 @@
  *      resource_id_t second = (a < b) ? b : a;
  *      The caller can name them in either order: first is the lower rank.
  *   3. pthread_mutex_lock(&r->locks[first]), then
- *      pthread_mutex_lock(&r->locks[second]). No check: write a comment that
- *      says why (sync.h, CALLS THAT NEED NO CHECK).
+ *      pthread_mutex_lock(&r->locks[second]). No check: sync.h, CALLS THAT
+ *      NEED NO CHECK, gives the reason.
  *   4. Add 1 to r->acquisitions[first] and to r->acquisitions[second].
  *   5. Return 0.
  */

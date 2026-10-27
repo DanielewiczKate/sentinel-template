@@ -98,8 +98,8 @@ static pool_t *start_failed(pool_t *p, int i, int rc)
  *        log_writef(log, LOG_SYSTEM,
  *                   "worker pool started: %d workers, %d us, deadline %d ms",
  *                   n_workers, service_us, late_ms);
- *      Do not check its result. Write a comment that says why: a lost log
- *      line is not an error of the pool (the rule of Lab 1).
+ *      Do not check its result: a lost log line is not an error of the
+ *      pool (the rule of Lab 1).
  *   8. Return p.
  */
 pool_t *pool_create_deadline(int n_workers, queue_t *q, track_t *t,
@@ -122,8 +122,8 @@ pool_t *pool_create_deadline(int n_workers, queue_t *q, track_t *t,
  *   2. p->stop = 1. Each worker sees it, drains the queue, and returns.
  *   3. For each i from 0 to p->n_workers - 1:
  *        pthread_join(p->tids[i], NULL);
- *      Do not check its result. Write a comment that says why: each one is
- *      a thread of this pool that no other code joins.
+ *      Do not check its result: each one is a thread of this pool that no
+ *      other code joins.
  *   4. If p->log is not NULL, write the line of ipc.h:
  *        log_writef(p->log, LOG_SYSTEM, "worker pool stopped: %ld processed",
  *                   pool_total_processed(p));

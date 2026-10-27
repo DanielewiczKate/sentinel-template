@@ -26,8 +26,8 @@
  * set errno. A sem_* function returns -1 and sets errno. Each function of
  * this file gives its errors in errno.
  *
- * CALLS THAT NEED NO CHECK in your three files, each with a comment that
- * says why (the rule of Lab 1):
+ * CALLS THAT NEED NO CHECK in your three files, and why. They need no
+ * branch and no comment:
  *   - pthread_mutex_lock and pthread_mutex_unlock of a mutex that
  *     pthread_mutex_init made, by the thread that holds it;
  *   - sem_post of empty or full: neither one can pass the capacity;

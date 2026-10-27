@@ -15,7 +15,7 @@ machine and your own private copy of this repository.
 
 | Document | Where | What it holds |
 |---|---|---|
-| Lab Documentation | the course gives it to you | The scenario: the detachment, the four sensors, the four parts of SENTINEL, and a user story |
+| Lab Documentation | on Brightspace | The scenario: the detachment, the four sensors, the four parts of SENTINEL, and a user story |
 | SENTINEL Lab Manual | [`docs/manual/sentinel_manual.pdf`](docs/manual/sentinel_manual.pdf) | The facts for all labs: the labs, the requirements, the repository, the given programs, the make targets |
 | Setup Guide | [`docs/setup/setup.pdf`](docs/setup/setup.pdf) | Your machine, the tools, and your private copy of this repository |
 | Submission Guide | [`docs/submit/submit.pdf`](docs/submit/submit.pdf) | The marks and the deadlines of each lab, the oral exam, the Lab 4 video, and how to hand in a lab |

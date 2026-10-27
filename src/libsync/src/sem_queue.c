@@ -152,8 +152,8 @@ int sem_queue_init(sem_queue_t *sq, size_t capacity)
  *
  *   1. If sq is NULL, return.
  *   2. queue_destroy(&sq->q), pthread_mutex_destroy(&sq->lock),
- *      sem_destroy(&sq->empty) and sem_destroy(&sq->full). No check: write a
- *      comment that says why (sync.h, CALLS THAT NEED NO CHECK).
+ *      sem_destroy(&sq->empty) and sem_destroy(&sq->full). No check: sync.h,
+ *      CALLS THAT NEED NO CHECK, gives the reason.
  */
 void sem_queue_destroy(sem_queue_t *sq)
 {
@@ -171,8 +171,8 @@ void sem_queue_destroy(sem_queue_t *sq)
  *   6. sem_post(&sq->full): one more report waits.
  *   7. Return rc.
  *   queue_push cannot fail in step 4: step 2 gave this thread a free slot.
- *   No check of the lock, the unlock and sem_post: write a comment that
- *   says why (sync.h, CALLS THAT NEED NO CHECK).
+ *   No check of the lock, the unlock and sem_post: sync.h, CALLS THAT NEED
+ *   NO CHECK, gives the reason.
  */
 int sem_queue_push(sem_queue_t *sq, const pending_t *p)
 {

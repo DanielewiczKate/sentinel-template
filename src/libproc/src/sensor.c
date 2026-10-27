@@ -100,8 +100,7 @@
  *           in its place. If the call fails: _exit(126).
  *        b. signal(SIGPIPE, SIG_IGN). Then a write to a pipe that has no
  *           reader gives EPIPE, and contactfeed stops normally. No check:
- *           write a comment that says why (it cannot fail for a valid
- *           signal).
+ *           it cannot fail for a valid signal.
  *        c. cpu_unpin() (common/cpu.h). The child gets the one processor
  *           of the centre; this gives it each processor. No check.
  *        d. Make the argument list, with a NULL at its end:
@@ -112,16 +111,16 @@
  *        e. execvp(net->feed_path, argv). It returns only when it fails:
  *           then _exit(127).
  *   9. In the centre: close(fds[1]). The child now holds the only write
- *      end, so the channel ends when the child stops. No check: write a
- *      comment that says why (a close of a valid pipe end does not fail). Then set s->pid,
+ *      end, so the channel ends when the child stops. No check: a close of
+ *      a valid pipe end does not fail. Then set s->pid,
  *      s->rate, s->burst and s->started_ns (sc_now_ns()), and add 1 to
  *      net->n_sensors.
  *  10. If net->log is not NULL, write the line of proc.h:
  *        log_writef(net->log, LOG_SYSTEM, "sensor %s started pid=%d %s=%d fd=%d",
  *                   sensor_name(id), (int)pid, burst ? "burst" : "rate",
  *                   rate, s->fd);
- *      No check: write a comment that says why (a lost log line is not an
- *      error of the sensor, the rule of Lab 1).
+ *      No check: a lost log line is not an error of the sensor (the rule
+ *      of Lab 1).
  *  11. Return 0.
  */
 int sensor_spawn(sensor_net_t *net, sensor_id_t id, int rate, int burst)
@@ -140,8 +139,8 @@ int sensor_spawn(sensor_net_t *net, sensor_id_t id, int rate, int burst)
  *      to EINVAL and return -1.
  *   2. sensor_t *s = &net->sensors[id]. If s->pid is 0, return 0: it does
  *      not run.
- *   3. kill(s->pid, SIGTERM). No check: write a comment that says why (the
- *      pid is a child that this process has not collected, so it exists).
+ *   3. kill(s->pid, SIGTERM). No check: the pid is a child that this
+ *      process has not collected, so it exists.
  *   4. Wait for it, and wait again after a signal:
  *        while (waitpid(pid, NULL, 0) < 0) {
  *            if (errno != EINTR) {
