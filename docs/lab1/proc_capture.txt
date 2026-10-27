@@ -1,0 +1,13 @@
+Name:	demo_lab1
+Pid:	1732732
+PPid:	1732727
+VmRSS:	    2228 kB
+Threads:	1
+
+total 0
+lr-x------ 1 kate users 64 Oct 26 12:01 0 -> /dev/null
+l-wx------ 1 kate users 64 Oct 26 12:01 1 -> /home/kate/src/repos/sentinel-template/docs/lab1/demo_output.txt
+l-wx------ 1 kate users 64 Oct 26 12:01 2 -> /tmp/claude-1000/-home-kate-src-repos-sentinel-template/4a130d16-c974-4b94-839f-62bc70bc89ea/tasks/b4jp4hai3.output
+l-wx------ 1 kate users 64 Oct 26 12:01 3 -> /home/kate/src/repos/sentinel-template/docs/lab1/missions.log
+lr-x------ 1 kate users 64 Oct 26 12:01 4 -> pipe:[3186261]
+lr-x------ 1 kate users 64 Oct 26 12:01 63 -> pipe:[3186261]
