@@ -105,9 +105,16 @@ src/sentinel: $(filter src/libsync,$(READY))
 $(BUILD):
 	mkdir -p $(BUILD)
 
+# make test runs the tests of each lab that has a Makefile. With LAB=N, it
+# runs the tests of Labs 1 to N only, because the stubs of a later lab fail
+# its own tests. make submit LAB=N passes LAB to it. Lab 4 is src/libsync and
+# src/sentinel, so LAB=4 runs each lab.
+TEST_LAST := $(if $(filter 1 2 3 4,$(LAB)),$(word $(LAB),1 2 3 5),5)
+TESTED    := $(filter $(wordlist 1,$(TEST_LAST),$(LABS)),$(READY))
+
 test: all
 	@if [ -z "$(READY)" ]; then echo "  no lab in src/ has a Makefile yet: nothing to test"; fi
-	@for d in $(READY); do $(MAKE) -C $$d test || exit 1; done
+	@for d in $(TESTED); do $(MAKE) -C $$d test || exit 1; done
 
 # Lab 1: a feed from the four sensors, then your demo on it. The old mission
 # log is removed first, because a new run adds its lines to the end of the file.

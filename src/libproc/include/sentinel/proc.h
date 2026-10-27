@@ -6,8 +6,10 @@
  * the next report that the centre handles.
  *
  * WHO WRITES WHAT. You write the functions marked YOURS, in the file that
- * each section names: src/sensor.c, src/prio_channel.c and src/sched.c. The
- * functions marked GIVEN are in src/libproc/given/. You read them, and you
+ * each section names: src/sensor.c, src/prio_channel.c and src/sched.c.
+ * Each of the three files comes with a stub for each of these functions,
+ * and its steps in a comment. The functions marked GIVEN are in
+ * src/libproc/given/. You read them, and you
  * do not change them. Do not change a declaration in this file: the tests
  * that mark your lab call each function as it is declared here.
  *
