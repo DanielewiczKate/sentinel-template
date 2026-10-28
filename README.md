@@ -23,12 +23,16 @@ machine and your own private copy of this repository.
 | Lab 1 Guide | [`docs/lab1/lab1_guide.pdf`](docs/lab1/lab1_guide.pdf) | The ideas behind Lab 1 |
 | Lab 1 Primer | [`docs/lab1/lab1_primer.pdf`](docs/lab1/lab1_primer.pdf) | `make` and your Makefile, tests with `assert`, and `/proc` for `proc.c` |
 | Lab 1 prelab | [`docs/lab1/prelab1.pdf`](docs/lab1/prelab1.pdf) | The questions to answer before the Lab 1 session |
+| Lab 1 slides | [`docs/lab1/lab1_slides.pdf`](docs/lab1/lab1_slides.pdf) | The slides of the Lab 1 session: all four labs, the marks, the dates, and the start of Lab 1 |
 | Lab 2 Brief | [`docs/lab2/lab2_brief.pdf`](docs/lab2/lab2_brief.pdf) | The one paper of Lab 2: its contract, its ideas and its hand-in |
 | Lab 2 prelab | [`docs/lab2/prelab2.pdf`](docs/lab2/prelab2.pdf) | The questions to answer before the Lab 2 session |
+| Lab 2 slides | [`docs/lab2/lab2_slides.pdf`](docs/lab2/lab2_slides.pdf) | The slides of the Lab 2 session: the task, the ideas, the commands and the hand-in |
 | Lab 3 Brief | [`docs/lab3/lab3_brief.pdf`](docs/lab3/lab3_brief.pdf) | The one paper of Lab 3: its contract, its ideas and its hand-in |
 | Lab 3 prelab | [`docs/lab3/prelab3.pdf`](docs/lab3/prelab3.pdf) | The questions to answer before the Lab 3 session |
+| Lab 3 slides | [`docs/lab3/lab3_slides.pdf`](docs/lab3/lab3_slides.pdf) | The slides of the Lab 3 session: the task, the ideas, the race, the commands and the hand-in |
 | Lab 4 Brief | [`docs/lab4/lab4_brief.pdf`](docs/lab4/lab4_brief.pdf) | The one paper of Lab 4: its contract, its ideas, its hand-in and the video |
 | Lab 4 prelab | [`docs/lab4/prelab4.pdf`](docs/lab4/prelab4.pdf) | The questions to answer before the Lab 4 session |
+| Lab 4 slides | [`docs/lab4/lab4_slides.pdf`](docs/lab4/lab4_slides.pdf) | The slides of the Lab 4 session: the task, the ideas, the commands, the hand-in and the video |
 | The page | [`web/README.md`](web/README.md) | The operations centre display |
 | Lab 1 directory | [`src/libsyscall/README.md`](src/libsyscall/README.md) | The files that you write for Lab 1 |
 | Lab 2 directory | [`src/libproc/README.md`](src/libproc/README.md) | The files that you write for Lab 2, and the files that the course gives |
