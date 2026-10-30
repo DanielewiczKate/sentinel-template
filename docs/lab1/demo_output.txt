@@ -1,0 +1,15 @@
+lines read 400
+accepted   400
+rejected   0
+priority   40
+process report
+  pid        1732732
+  ppid       1732727
+  name       demo_lab1
+  vm_size    3664 kB
+  vm_rss     2228 kB
+  threads    1
+  open_fds   5
+  ctxt_vol   400
+  ctxt_invol 0
+open_fds before=5 after=5 (balanced)
