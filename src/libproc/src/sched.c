@@ -163,10 +163,31 @@ int sched_next(sched_t *s, pending_t *out)
  */
 sched_t *sched_create(sched_policy_t policy, size_t capacity)
 {
-    (void)policy;
-    (void)capacity;
-    errno = ENOSYS;
-    return NULL;
+    if (POLICY_FCFS != policy && POLICY_PRIORITY != policy && POLICY_RR != policy) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (0 == capacity)
+        capacity = 4096;
+
+    sched_t *s = malloc(sizeof *s);
+    if (NULL == s)
+        return NULL;
+
+    s->slots = calloc(capacity, sizeof *s->slots);
+    if (NULL == s->slots) {
+        int err = errno;
+        free(s);
+        errno = err;
+        return NULL;
+    }
+
+    s->policy = policy;
+    s->capacity = capacity;
+    s->count = 0;
+    s->rr_next = 0;
+    return s;
 }
 
 /* sched_destroy: free the scheduler.
@@ -177,7 +198,11 @@ sched_t *sched_create(sched_policy_t policy, size_t capacity)
  */
 void sched_destroy(sched_t *s)
 {
-    (void)s;
+    if (NULL == s)
+        return;
+
+    free(s->slots);
+    free(s);
 }
 
 /* sched_push: add a copy of *p at the end.
@@ -191,10 +216,19 @@ void sched_destroy(sched_t *s)
  */
 int sched_push(sched_t *s, const pending_t *p)
 {
-    (void)s;
-    (void)p;
-    errno = ENOSYS;
-    return -1;
+    if (NULL == s || NULL == p) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (s->count == s->capacity) {
+        errno = ENOSPC;
+        return -1;
+    }
+
+    s->slots[s->count] = *p;
+    s->count++;
+    return 0;
 }
 
 /* sched_pending: how many reports wait.
@@ -204,6 +238,7 @@ int sched_push(sched_t *s, const pending_t *p)
  */
 size_t sched_pending(const sched_t *s)
 {
-    (void)s;
-    return 0;
+    if (NULL == s)
+        return 0;
+    return s->count;
 }

@@ -104,6 +104,18 @@ static void test_burst(void)
    sensor_stop) and log_close(lg). */
 static void test_twice(void)
 {
+    log_t *lg = log_open(LOGP);
+    assert(lg != NULL);
+    sensor_net_t net;
+    assert(sensor_net_init(&net, FEED, lg) == 0);
+
+    assert(sensor_spawn(&net, SENSOR_NWS, 20, 0) == 0);
+    assert(sensor_spawn(&net, SENSOR_NWS, 20, 0) == -1);
+    assert(errno == EEXIST);
+    assert(net.n_sensors == 1);
+
+    sensor_net_shutdown(&net);
+    log_close(lg);
 }
 
 /* A sensor that finished. Make a network, and start AUR with burst 3. Call
@@ -114,6 +126,26 @@ static void test_twice(void)
    net.n_sensors is 0. Then sensor_net_shutdown and log_close. */
 static void test_reap(void)
 {
+    log_t *lg = log_open(LOGP);
+    assert(lg != NULL);
+    sensor_net_t net;
+    assert(sensor_net_init(&net, FEED, lg) == 0);
+
+    assert(sensor_spawn(&net, SENSOR_AUR, 3, 1) == 0);
+    assert(read_lines(&net, SENSOR_AUR, 5000) == 3);
+
+    int got = 0;
+    for (int i = 0; i < 200 && got != 1; i++) {
+        got = sensor_reap(&net);
+        if (got != 1)
+            usleep(10000);
+    }
+    assert(got == 1);
+    assert(net.sensors[SENSOR_AUR].pid == 0);
+    assert(net.n_sensors == 0);
+
+    sensor_net_shutdown(&net);
+    log_close(lg);
 }
 
 /* The FIFO. prio_channel_t ch; prio_open(&ch, FIFO) gives 0. Then
@@ -122,6 +154,17 @@ static void test_reap(void)
    gives -1 with errno ENOENT. */
 static void test_fifo(void)
 {
+    prio_channel_t ch;
+    assert(prio_open(&ch, FIFO) == 0);
+
+    struct stat st;
+    assert(stat(FIFO, &st) == 0);
+    assert(S_ISFIFO(st.st_mode));
+    assert((st.st_mode & 0777) == 0600);
+
+    prio_close(&ch);
+    assert(stat(FIFO, &st) == -1);
+    assert(errno == ENOENT);
 }
 
 int main(void)

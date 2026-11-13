@@ -6,7 +6,7 @@
 int sc_open_read(const char *path)
 {
     while(1) {
-        int res = open(path, O_RDONLY);
+        int res = open(path, O_RDONLY | O_CLOEXEC);
         int err = errno;
 
         if(-1 != res) 
@@ -23,7 +23,7 @@ int sc_open_read(const char *path)
 int sc_open_write(const char *path, int append)
 {
     while(1) {
-        int res = open(path, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), 0644);
+        int res = open(path, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC) | O_CLOEXEC, 0644);
         int err = errno;
 
         if(-1 != res) 
@@ -40,7 +40,7 @@ int sc_open_write(const char *path, int append)
 int sc_open_write_mode(const char *path, int append, mode_t mode)
 {
     while(1) {
-        int res = open(path, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), mode);
+        int res = open(path, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC) | O_CLOEXEC, mode);
         int err = errno;
 
         if(-1 != res) 

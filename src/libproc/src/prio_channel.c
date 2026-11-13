@@ -108,11 +108,47 @@ static void open_failed(prio_channel_t *ch)
  */
 int prio_open(prio_channel_t *ch, const char *path)
 {
-    (void)ch;
-    (void)path;
-    (void)open_failed;      /* steps 7 to 9 call it */
-    errno = ENOSYS;
-    return -1;
+    if (NULL == ch || NULL == path) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    memset(ch, 0, sizeof *ch);
+    ch->fd = -1;
+    ch->fd_hold = -1;
+
+    size_t len = strlen(path);
+    if (len >= sizeof ch->path) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    memcpy(ch->path, path, len + 1);
+
+    unlink(path);
+
+    if (mkfifo(path, 0600) != 0) {
+        ch->path[0] = '\0';
+        return -1;
+    }
+
+    if (chmod(path, 0600) != 0) {
+        open_failed(ch);
+        return -1;
+    }
+
+    ch->fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    if (ch->fd < 0) {
+        open_failed(ch);
+        return -1;
+    }
+
+    ch->fd_hold = open(path, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (ch->fd_hold < 0) {
+        open_failed(ch);
+        return -1;
+    }
+
+    return 0;
 }
 
 /* prio_close: close the FIFO and remove it from the file system.
@@ -126,7 +162,21 @@ int prio_open(prio_channel_t *ch, const char *path)
  */
 void prio_close(prio_channel_t *ch)
 {
-    (void)ch;
+    if (NULL == ch)
+        return;
+
+    if (ch->fd_hold >= 0) {
+        sc_close(ch->fd_hold);
+        ch->fd_hold = -1;
+    }
+    if (ch->fd >= 0) {
+        sc_close(ch->fd);
+        ch->fd = -1;
+    }
+    if ('\0' != ch->path[0]) {
+        unlink(ch->path);
+        ch->path[0] = '\0';
+    }
 }
 
 /* prio_send: send one report into a FIFO that exists.
@@ -149,8 +199,41 @@ void prio_close(prio_channel_t *ch)
  */
 int prio_send(const char *path, const char *line)
 {
-    (void)path;
-    (void)line;
-    errno = ENOSYS;
-    return -1;
+    if (NULL == path || NULL == line) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    size_t len = strlen(line);
+    int add_nl = (0 == len || '\n' != line[len - 1]);
+
+    if (len + add_nl > CONTACT_LINE_MAX) {
+        errno = EMSGSIZE;
+        return -1;
+    }
+
+    char buf[CONTACT_LINE_MAX + 1];
+    memcpy(buf, line, len);
+    if (add_nl)
+        buf[len++] = '\n';
+
+    int fd;
+    while(1) {
+        fd = open(path, O_WRONLY | O_CLOEXEC);
+        int err = errno;
+
+        if(-1 != fd)
+            break;
+
+        if (EINTR == err)
+            continue;
+
+        return -1;
+    }
+
+    int rc = sc_write_all(fd, buf, len);
+    int err = errno;
+    sc_close(fd);
+    errno = err;
+    return rc;
 }
