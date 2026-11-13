@@ -4,6 +4,9 @@
 *.a
 *.d
 
+# scratch extraction folder
+/tmp/
+
 # the link that make watch makes to your run directory
 /web/live
 

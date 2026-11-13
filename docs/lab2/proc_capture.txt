@@ -1,0 +1,22 @@
+    PID    PPID STAT COMMAND
+ 525701       1 R    build/demo_lab2 --sched priority --ms 20000 --kill-sensor AUR --expected common/traffic.txt --log docs/lab2/missions.log
+ 525702  525701 S    /home/kate/src/repos/sentinel-template/build/contactfeed --sensor NWS --rate 20
+ 525704  525701 S    /home/kate/src/repos/sentinel-template/build/contactfeed --sensor AIS --rate 50
+ 525705  525701 S    /home/kate/src/repos/sentinel-template/build/contactfeed --sensor SAT --rate 2000
+ 525706  525701 Z    [demo_lab2] <defunct>
+
+total 0
+lr-x------ 1 kate users 64 Nov 12 22:22 0 -> /dev/null
+l-wx------ 1 kate users 64 Nov 12 22:22 1 -> /home/kate/src/repos/sentinel-template/docs/lab2/demo_output.txt
+l-wx------ 1 kate users 64 Nov 12 22:22 2 -> /home/kate/src/repos/sentinel-template/docs/lab2/demo_output.txt
+l-wx------ 1 kate users 64 Nov 12 22:22 3 -> /home/kate/src/repos/sentinel-template/docs/lab2/missions.log
+lr-x------ 1 kate users 64 Nov 12 22:22 4 -> /tmp/sentinel_priority.fifo
+l-wx------ 1 kate users 64 Nov 12 22:22 5 -> /tmp/sentinel_priority.fifo
+lr-x------ 1 kate users 64 Nov 12 22:22 6 -> pipe:[5011101]
+lr-x------ 1 kate users 64 Nov 12 22:22 8 -> pipe:[5011103]
+lr-x------ 1 kate users 64 Nov 12 22:22 9 -> pipe:[5011104]
+
+total 0
+lr-x------ 1 kate users 64 Nov 12 22:22 0 -> /dev/null
+l-wx------ 1 kate users 64 Nov 12 22:22 1 -> pipe:[5011101]
+l-wx------ 1 kate users 64 Nov 12 22:22 2 -> /home/kate/src/repos/sentinel-template/docs/lab2/demo_output.txt
