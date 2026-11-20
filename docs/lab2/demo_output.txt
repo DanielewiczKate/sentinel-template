@@ -7,7 +7,7 @@ SENTINEL Part 2 — operations centre
 
 operations centre
   policy          priority
-  elapsed         20000.330 ms
+  elapsed         20000.431 ms
   reports read    21405
   accepted        21405
   rejected        0
@@ -19,15 +19,15 @@ operations centre
     AUR           3
     AIS           1000
     SAT           20000
-  latency mean    15.988 ms
-  latency worst   34.135 ms
-  urgent mean     2.236 ms   (HIGH and P)
-  urgent worst    5.575 ms
+  latency mean    15.895 ms
+  latency worst   33.868 ms
+  urgent mean     2.220 ms   (HIGH and P)
+  urgent worst    5.569 ms
 
 requirements
   R1 four sensors report at once      yes
   R1 centre survives a sensor death   yes (AUR killed, steady sensors alive, 21405 reports served)
-  R2 priority contact overtakes       yes (priority waits 2.2 ms, all traffic 16.0 ms)
+  R2 priority contact overtakes       yes (priority waits 2.2 ms, all traffic 15.9 ms)
   centre priority HIGH                681 reports (not filed, in a monitored region)
   R6 every action timestamped         yes (docs/lab2/missions.log)
   urgent contact via FIFO             received
